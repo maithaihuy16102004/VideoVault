@@ -1,0 +1,12 @@
+D:\Work\backend\src\VideoVault.Domain\bin\Debug\net8.0\VideoVault.Domain.deps.json
+D:\Work\backend\src\VideoVault.Domain\bin\Debug\net8.0\VideoVault.Domain.dll
+D:\Work\backend\src\VideoVault.Domain\bin\Debug\net8.0\VideoVault.Domain.pdb
+D:\Work\backend\src\VideoVault.Domain\obj\Debug\net8.0\VideoVault.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\Work\backend\src\VideoVault.Domain\obj\Debug\net8.0\VideoVault.Domain.AssemblyInfoInputs.cache
+D:\Work\backend\src\VideoVault.Domain\obj\Debug\net8.0\VideoVault.Domain.AssemblyInfo.cs
+D:\Work\backend\src\VideoVault.Domain\obj\Debug\net8.0\VideoVault.Domain.csproj.CoreCompileInputs.cache
+D:\Work\backend\src\VideoVault.Domain\obj\Debug\net8.0\VideoVault.Domain.dll
+D:\Work\backend\src\VideoVault.Domain\obj\Debug\net8.0\refint\VideoVault.Domain.dll
+D:\Work\backend\src\VideoVault.Domain\obj\Debug\net8.0\VideoVault.Domain.pdb
+D:\Work\backend\src\VideoVault.Domain\obj\Debug\net8.0\ref\VideoVault.Domain.dll
+D:\Work\backend\src\VideoVault.Domain\obj\Debug\net8.0\VideoVault.Domain.sourcelink.json

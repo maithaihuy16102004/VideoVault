@@ -1,0 +1,16 @@
+D:\Work\backend\src\VideoVault.Infrastructure\bin\Debug\net8.0\VideoVault.Infrastructure.deps.json
+D:\Work\backend\src\VideoVault.Infrastructure\bin\Debug\net8.0\VideoVault.Infrastructure.dll
+D:\Work\backend\src\VideoVault.Infrastructure\bin\Debug\net8.0\VideoVault.Infrastructure.pdb
+D:\Work\backend\src\VideoVault.Infrastructure\bin\Debug\net8.0\VideoVault.Domain.dll
+D:\Work\backend\src\VideoVault.Infrastructure\bin\Debug\net8.0\VideoVault.Domain.pdb
+D:\Work\backend\src\VideoVault.Infrastructure\obj\Debug\net8.0\VideoVault.Infrastructure.csproj.AssemblyReference.cache
+D:\Work\backend\src\VideoVault.Infrastructure\obj\Debug\net8.0\VideoVault.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+D:\Work\backend\src\VideoVault.Infrastructure\obj\Debug\net8.0\VideoVault.Infrastructure.AssemblyInfoInputs.cache
+D:\Work\backend\src\VideoVault.Infrastructure\obj\Debug\net8.0\VideoVault.Infrastructure.AssemblyInfo.cs
+D:\Work\backend\src\VideoVault.Infrastructure\obj\Debug\net8.0\VideoVault.Infrastructure.csproj.CoreCompileInputs.cache
+D:\Work\backend\src\VideoVault.Infrastructure\obj\Debug\net8.0\VideoVau.122E2827.Up2Date
+D:\Work\backend\src\VideoVault.Infrastructure\obj\Debug\net8.0\VideoVault.Infrastructure.dll
+D:\Work\backend\src\VideoVault.Infrastructure\obj\Debug\net8.0\refint\VideoVault.Infrastructure.dll
+D:\Work\backend\src\VideoVault.Infrastructure\obj\Debug\net8.0\VideoVault.Infrastructure.pdb
+D:\Work\backend\src\VideoVault.Infrastructure\obj\Debug\net8.0\ref\VideoVault.Infrastructure.dll
+D:\Work\backend\src\VideoVault.Infrastructure\obj\Debug\net8.0\VideoVault.Infrastructure.sourcelink.json

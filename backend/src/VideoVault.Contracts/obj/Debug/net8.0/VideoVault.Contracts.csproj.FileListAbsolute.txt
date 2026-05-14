@@ -1,0 +1,12 @@
+D:\Work\backend\src\VideoVault.Contracts\bin\Debug\net8.0\VideoVault.Contracts.deps.json
+D:\Work\backend\src\VideoVault.Contracts\bin\Debug\net8.0\VideoVault.Contracts.dll
+D:\Work\backend\src\VideoVault.Contracts\bin\Debug\net8.0\VideoVault.Contracts.pdb
+D:\Work\backend\src\VideoVault.Contracts\obj\Debug\net8.0\VideoVault.Contracts.GeneratedMSBuildEditorConfig.editorconfig
+D:\Work\backend\src\VideoVault.Contracts\obj\Debug\net8.0\VideoVault.Contracts.AssemblyInfoInputs.cache
+D:\Work\backend\src\VideoVault.Contracts\obj\Debug\net8.0\VideoVault.Contracts.AssemblyInfo.cs
+D:\Work\backend\src\VideoVault.Contracts\obj\Debug\net8.0\VideoVault.Contracts.csproj.CoreCompileInputs.cache
+D:\Work\backend\src\VideoVault.Contracts\obj\Debug\net8.0\VideoVault.Contracts.dll
+D:\Work\backend\src\VideoVault.Contracts\obj\Debug\net8.0\refint\VideoVault.Contracts.dll
+D:\Work\backend\src\VideoVault.Contracts\obj\Debug\net8.0\VideoVault.Contracts.pdb
+D:\Work\backend\src\VideoVault.Contracts\obj\Debug\net8.0\ref\VideoVault.Contracts.dll
+D:\Work\backend\src\VideoVault.Contracts\obj\Debug\net8.0\VideoVault.Contracts.sourcelink.json
