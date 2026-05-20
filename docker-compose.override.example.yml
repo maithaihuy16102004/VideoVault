@@ -1,0 +1,40 @@
+# docker-compose.override.yml.example
+# This file is for LOCAL DEVELOPMENT ONLY and should NOT be committed to Git.
+# 
+# Usage:
+#   1. Copy this file to docker-compose.override.yml
+#   2. Edit with your actual local credentials
+#   3. Run: docker-compose up -d
+#
+# NOTE: docker-compose.override.yml is automatically loaded by docker-compose
+# and is git-ignored for security reasons.
+
+version: '3.9'
+
+services:
+  postgres:
+    environment:
+      # Override the default development password with your actual one
+      POSTGRES_PASSWORD: your_actual_db_password_here
+
+  redis:
+    # Redis for local dev typically doesn't need overrides
+    ports:
+      - "6379:6379"
+
+  minio:
+    environment:
+      # Override MinIO credentials
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: your_actual_minio_password
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+  # Uncomment and configure if you want to override the API service
+  # api:
+  #   environment:
+  #     JWT_KEY: your_jwt_key_here
+  #     GEMINI_API_KEY: your_gemini_api_key_here
+  #     DATABASE_URL: postgresql://postgres:your_db_password@postgres:5432/videovault
+  #     ENVIRONMENT: Development

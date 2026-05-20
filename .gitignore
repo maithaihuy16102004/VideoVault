@@ -1,0 +1,218 @@
+# =========================
+# OS / EDITOR
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+.vs/
+.idea/
+.fleet/
+.history/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+*.suo
+*.user
+*.userosscache
+*.rsuser
+*.swp
+*.sln.docstates
+
+# =========================
+# .NET / ASP.NET
+# =========================
+[Bb]in/
+[Oo]bj/
+[Pp]ublish/
+[Tt]est[Rr]esults/
+artifacts/
+packages/
+
+*.nupkg
+*.snupkg
+*.dll
+*.exe
+*.pdb
+*.cache
+*.deps.json
+*.runtimeconfig.json
+*.ref.dll
+*.sourcelink.json
+*.GeneratedMSBuildEditorConfig.editorconfig
+*.AssemblyInfo.cs
+*.FileListAbsolute.txt
+
+# Local app settings and launch profiles
+appsettings.Development.json
+appsettings.Production.json
+appsettings.*.local.json
+launchSettings.json
+
+# =========================
+# NODE / FRONTEND
+# =========================
+node_modules/
+dist/
+build/
+coverage/
+storybook-static/
+.next/
+.nuxt/
+.svelte-kit/
+.turbo/
+.cache/
+.parcel-cache/
+.vite/
+.eslintcache
+playwright-report/
+test-results/
+vite.svg
+*.tsbuildinfo
+*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# =========================
+# PYTHON / AI
+# =========================
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.hypothesis/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+
+# Virtual environments
+venv/
+env/
+.venv/
+pythonenv/
+melo_env/
+conda/
+.miniconda/
+.anaconda/
+**/venv/
+**/env/
+**/.venv/
+**/melo_env/
+**/xtts_env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# PyTorch / HuggingFace / model caches
+.huggingface/
+.cache/huggingface/
+.cache/torch/
+torch_cache/
+models/
+checkpoints/
+weights/
+pretrained_models/
+xtts_models/
+xtts_env/
+wandb/
+runs/
+outputs/
+
+# =========================
+# APPLICATION TEMP / MEDIA
+# =========================
+temp/
+temp_*/
+cache/
+cache_*/
+temp_stt/
+temp_audio/
+temp_tts/
+uploads/
+downloads/
+generated_audio/
+generated_video/
+*.wav
+*.mp3
+*.mp4
+*.mkv
+
+# Scratch / experiments
+scratch/
+
+# =========================
+# SECRETS / LOCAL CONFIG
+# =========================
+.env
+.env.*
+.env.local
+.env.*.local
+frontend/.env.local
+frontend/.env.*.local
+*.secrets.json
+secrets.json
+credentials.json
+local.settings.json
+appsettings.local.json
+
+# Keep local overrides out of source control
+*.secret
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+
+# =========================
+# DATABASE / BACKUP FILES
+# =========================
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlitedb
+*.bak
+*.tmp
+
+# =========================
+# DOCKER / INFRA
+# =========================
+docker-data/
+volumes/
+.docker/
+docker-compose.override.yml
+docker-compose.*.override.yml
+docker-compose.local.yml
+docker-compose.*.local.yml
+
+# =========================
+# FFMPEG / BINARY TOOLS
+# =========================
+ffmpeg.exe
+ffmpeg.zip
+
+# =========================
+# GENERAL TEMP FILES
+# =========================
+*.tmp
+*.temp
+*.log.*
+*.orig
+*.rej

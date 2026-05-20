@@ -12,17 +12,36 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// ========== CONFIGURE FILE UPLOAD LIMIT (500 MB) ==========
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 524288000; // 500 MB in bytes
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 524288000; // 500 MB in bytes
+});
+
 // ========== SERVICES (DI) ==========
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<DownloadService>();
 builder.Services.AddScoped<PlanService>();
 builder.Services.AddSingleton<VideoProcessorService>();
 builder.Services.AddSingleton<ScrapingService>();
+builder.Services.AddSingleton<PipelineService>();
 builder.Services.AddHttpClient<IAiService, AiService>();
 builder.Services.AddScoped<IAiService, AiService>();
 
 // ========== JWT AUTHENTICATION ==========
-var jwtKey = builder.Configuration["JWT:Key"] ?? "VideoVaultSuperSecretKeyThatShouldBeLongAndSecure123!";
+var jwtKey = builder.Configuration["JWT:Key"];
+if (string.IsNullOrEmpty(jwtKey))
+{
+    throw new InvalidOperationException(
+        "JWT:Key is not configured. Set it via appsettings.json, User Secrets, or environment variables. " +
+        "See LOCAL_SETUP.md for setup instructions.");
+}
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -41,7 +60,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnMessageReceived = context =>
             {
-                var accessToken = context.Request.Query["access_token"];
+                // 1) Try from query string (for SignalR etc.)
+                var accessToken = context.Request.Query["access_token"].FirstOrDefault();
+
+                // 2) Try from cookie
+                if (string.IsNullOrEmpty(accessToken))
+                {
+                    accessToken = context.Request.Cookies["access_token"];
+                }
+
                 if (!string.IsNullOrEmpty(accessToken))
                 {
                     context.Token = accessToken;
