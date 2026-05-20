@@ -158,10 +158,10 @@ const analyzeVideoStrategy = (video: {
         },
         sales: () => {
             const parts = [];
-            if (views > channelAvgViews * 2) parts.push(`${views} views — đã có traffic tốt`);
-            if (saves >= 2) parts.push(`${saves} lượt lưu — dấu hiệu ý định mua hàng cực mạnh`);
+            if (views > channelAvgViews * 2) parts.push(`${views} views — đã có traffic mồi cực tốt`);
+            if (saves >= 2) parts.push(`${saves} lượt lưu — người xem có ý định mua hàng (Purchase Intent) rất cao`);
             if (engagementRate >= 1.5) parts.push(`Engagement ${engagementRate}% — khán giả tương tác tích cực`);
-            parts.push('AI khuyến nghị: Chạy DOANH THU vì video có cả traffic + ý định mua. Thêm link sản phẩm vào bio và chạy promote');
+            parts.push('AI khuyến nghị: Gắn link TikTok Shop hoặc Affiliate vào video này và chạy chiến dịch TỐI ƯU GMV (Doanh Thu) để chốt đơn ngay lập tức');
             return parts.join('. ') + '.';
         },
         profile: () => {
@@ -187,9 +187,9 @@ const analyzeVideoStrategy = (video: {
             { label: 'Viral Score', value: Math.min(Math.round(shares * 15 + views * 0.01), 100).toString(), impact: 'positive' },
         ],
         sales: [
-            { label: 'Lượt lưu (ý định mua)', value: saves.toString(), impact: saves >= 2 ? 'positive' : 'neutral' },
-            { label: 'Like / View ratio', value: (likes / Math.max(views, 1) * 100).toFixed(1) + '%', impact: 'positive' },
-            { label: 'Traffic sẵn có', value: views > channelAvgViews ? 'Cao' : 'Thấp', impact: views > channelAvgViews ? 'positive' : 'negative' },
+            { label: 'Purchase Intent (Lưu)', value: saves.toString(), impact: saves >= 2 ? 'positive' : 'neutral' },
+            { label: 'Dự báo ROAS', value: (1.5 + (saves * 0.5)).toFixed(1) + 'x', impact: 'positive' },
+            { label: 'Traffic chuyển đổi', value: views > channelAvgViews ? 'Cao' : 'Thấp', impact: views > channelAvgViews ? 'positive' : 'negative' },
         ],
         profile: [
             { label: 'Views hiện tại', value: views.toString(), impact: 'negative' },
@@ -201,7 +201,7 @@ const analyzeVideoStrategy = (video: {
         views: `+${Math.round(views * 0.8 + 500)} - ${Math.round(views * 2 + 1500)} views dự kiến`,
         engagement: `+${Math.round(likes * 3 + 100)} - ${Math.round(likes * 8 + 400)} tương tác dự kiến`,
         followers: `+${Math.round(channelFollowers * 0.1)} - ${Math.round(channelFollowers * 0.4)} follower dự kiến`,
-        sales: `Doanh thu ước tính: ${(views * 15).toLocaleString('vi-VN')}đ - ${(views * 45).toLocaleString('vi-VN')}đ`,
+        sales: `Doanh thu GMV ước tính: ${(views * 25).toLocaleString('vi-VN')}đ - ${(views * 75).toLocaleString('vi-VN')}đ (Từ TikTok Shop)`,
         profile: `+${Math.round(views * 2 + 200)} - ${Math.round(views * 5 + 800)} lượt xem hồ sơ`,
     };
 
@@ -308,7 +308,7 @@ const goalConfig: Record<PromoteGoal, { icon: React.ElementType; label: string; 
     engagement: { icon: Heart, label: 'Tăng tương tác', desc: 'Thúc đẩy lượt thích & bình luận', color: 'text-pink-400', gradient: 'from-pink-500 to-rose-500' },
     views: { icon: Eye, label: 'Tăng lượt xem', desc: 'Phủ sóng rộng, tăng tiếp cận', color: 'text-blue-400', gradient: 'from-blue-500 to-cyan-500' },
     followers: { icon: UserPlus, label: 'Tăng follower', desc: 'Thu hút người theo dõi mới', color: 'text-green-400', gradient: 'from-green-500 to-emerald-500' },
-    sales: { icon: ShoppingBag, label: 'Tăng doanh thu', desc: 'Chuyển đổi thành đơn hàng', color: 'text-amber-400', gradient: 'from-amber-500 to-orange-500' },
+    sales: { icon: ShoppingBag, label: 'Doanh thu (Shop)', desc: 'Tối ưu GMV & ROAS Shop', color: 'text-amber-400', gradient: 'from-amber-500 to-orange-500' },
     profile: { icon: FileText, label: 'Xem hồ sơ', desc: 'Kéo traffic về trang cá nhân', color: 'text-violet-400', gradient: 'from-violet-500 to-purple-500' },
 };
 
