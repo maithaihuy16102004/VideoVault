@@ -161,7 +161,7 @@ const analyzeVideoStrategy = (video: {
             if (views > channelAvgViews * 2) parts.push(`${views} views — đã có traffic mồi cực tốt`);
             if (saves >= 2) parts.push(`${saves} lượt lưu — người xem có ý định mua hàng (Purchase Intent) rất cao`);
             if (engagementRate >= 1.5) parts.push(`Engagement ${engagementRate}% — khán giả tương tác tích cực`);
-            parts.push('AI khuyến nghị: Gắn link TikTok Shop hoặc Affiliate vào video này và chạy chiến dịch TỐI ƯU GMV (Doanh Thu) để chốt đơn ngay lập tức');
+            parts.push('AI khuyến nghị: Gắn link TikTok Shop hoặc Affiliate vào video này và chạy chiến dịch TỐI ƯU GMV (TikTok Shop/Affiliate) để chốt đơn ngay lập tức');
             return parts.join('. ') + '.';
         },
         profile: () => {
@@ -188,7 +188,7 @@ const analyzeVideoStrategy = (video: {
         ],
         sales: [
             { label: 'Purchase Intent (Lưu)', value: saves.toString(), impact: saves >= 2 ? 'positive' : 'neutral' },
-            { label: 'Dự báo ROAS', value: (1.5 + (saves * 0.5)).toFixed(1) + 'x', impact: 'positive' },
+            { label: 'Dự báo ROAS (Shop)', value: (1.5 + (saves * 0.5)).toFixed(1) + 'x', impact: 'positive' },
             { label: 'Traffic chuyển đổi', value: views > channelAvgViews ? 'Cao' : 'Thấp', impact: views > channelAvgViews ? 'positive' : 'negative' },
         ],
         profile: [
@@ -201,7 +201,7 @@ const analyzeVideoStrategy = (video: {
         views: `+${Math.round(views * 0.8 + 500)} - ${Math.round(views * 2 + 1500)} views dự kiến`,
         engagement: `+${Math.round(likes * 3 + 100)} - ${Math.round(likes * 8 + 400)} tương tác dự kiến`,
         followers: `+${Math.round(channelFollowers * 0.1)} - ${Math.round(channelFollowers * 0.4)} follower dự kiến`,
-        sales: `Doanh thu GMV ước tính: ${(views * 25).toLocaleString('vi-VN')}đ - ${(views * 75).toLocaleString('vi-VN')}đ (Từ TikTok Shop)`,
+        sales: `Doanh thu GMV ước tính: ${(views * 25).toLocaleString('vi-VN')}đ - ${(views * 75).toLocaleString('vi-VN')}đ (TikTok Shop & Affiliate)`,
         profile: `+${Math.round(views * 2 + 200)} - ${Math.round(views * 5 + 800)} lượt xem hồ sơ`,
     };
 
