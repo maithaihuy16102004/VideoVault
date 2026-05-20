@@ -4,7 +4,7 @@ import {
     CreditCard, ShieldAlert, BarChart3, Users, Hash,
     Workflow, FileAudio, Languages, Mic2,
     Server, ShoppingBag, FolderKanban, LineChart,
-    Scissors, PlayCircle
+    Megaphone, PlayCircle
 } from 'lucide-react';
 import { useAuth } from '../shared/hooks/useAuth';
 import { Link, Outlet, useLocation } from '@tanstack/react-router';
@@ -25,8 +25,7 @@ const MainLayout: React.FC = () => {
         if (path.includes('automation/stt')) return 'auto-stt';
         if (path.includes('automation/translate')) return 'auto-translate';
         if (path.includes('automation/voice')) return 'auto-voice';
-        if (path.includes('editor/render')) return 'edit-render';
-        if (path.includes('editor/studio')) return 'edit-studio';
+        if (path.includes('growth/promote')) return 'growth-promote';
         if (path.includes('library/storage')) return 'lib-storage';
         if (path.includes('library/projects')) return 'lib-projects';
         if (path.includes('affiliate')) return 'affiliate';
@@ -62,10 +61,9 @@ const MainLayout: React.FC = () => {
             ]
         },
         {
-            title: 'Video Editor',
+            title: 'Quảng Cáo & Tăng Trưởng',
             items: [
-                { id: 'ed-studio', icon: Scissors, label: 'Studio Editor', path: '/editor/studio' },
-                { id: 'ed-render', icon: PlayCircle, label: 'Render Queue', path: '/editor/render' },
+                { id: 'growth-promote', icon: Megaphone, label: 'TikTok Promote (AI)', path: '/growth/promote' },
             ]
         },
         {

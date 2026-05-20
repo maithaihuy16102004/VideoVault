@@ -103,16 +103,11 @@ const routeTree = rootRoute.addChildren([
         path: 'automation/voice',
         component: lazyRouteComponent(() => import('@/routes/automation/voice')),
     }),
-    // Editor routes
+    // Growth routes
     createRoute({
         getParentRoute: () => rootRoute,
-        path: 'editor/studio',
-        component: lazyRouteComponent(() => import('@/routes/editor/studio')),
-    }),
-    createRoute({
-        getParentRoute: () => rootRoute,
-        path: 'editor/render',
-        component: lazyRouteComponent(() => import('@/routes/editor/render')),
+        path: 'growth/promote',
+        component: lazyRouteComponent(() => import('@/routes/growth/promote')),
     }),
     // Library routes
     createRoute({
