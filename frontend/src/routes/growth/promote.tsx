@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
     Megaphone, Search, Loader2, TrendingUp, Eye, Heart, MessageCircle,
     Users, Play, Sparkles, ChevronRight, X, Check, Star, Zap,
@@ -553,19 +554,19 @@ const TikTokPromote: React.FC = () => {
 
             {/* ─── Promote Modal ─────────────────────────────────── */}
             <AnimatePresence>
-                {showPromoteModal && selectedVideo && (
+                {showPromoteModal && selectedVideo && createPortal(
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+                        className="fixed top-0 left-0 w-screen h-screen z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
                         onClick={() => setShowPromoteModal(false)}
                     >
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0, y: 30 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.9, opacity: 0, y: 30 }}
-                            className="w-full max-w-lg bg-[#111113] border border-white/10 rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto"
+                            className="w-full max-w-[500px] bg-[#0a0a0f] border border-white/10 rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {paymentSuccess ? (
@@ -716,7 +717,7 @@ const TikTokPromote: React.FC = () => {
                                 </>
                             )}
                         </motion.div>
-                    </motion.div>
+                    </motion.div>, document.body
                 )}
             </AnimatePresence>
         </div>
