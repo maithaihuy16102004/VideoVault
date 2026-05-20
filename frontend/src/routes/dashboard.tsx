@@ -29,10 +29,11 @@ const Dashboard: React.FC = () => {
         setUrl('');
     };
 
+    const isAdmin = user?.role === 'admin';
     const quotaUsed = user?.quotaUsed ?? 0;
     const quotaTotal = user?.quotaTotal ?? 10;
-    const quotaRemaining = quotaTotal - quotaUsed;
-    const quotaPct = quotaTotal > 0 ? (quotaUsed / quotaTotal) * 100 : 0;
+    const quotaRemaining = isAdmin ? 'Vô cực' : (quotaTotal - quotaUsed);
+    const quotaPct = isAdmin ? 0 : (quotaTotal > 0 ? (quotaUsed / quotaTotal) * 100 : 0);
 
     return (
         <div className="p-8 max-w-5xl mx-auto space-y-8">
@@ -182,23 +183,39 @@ const Dashboard: React.FC = () => {
                     <div className="glass-card p-5 space-y-3">
                         <div className="flex justify-between items-center">
                             <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Quota hôm nay</h3>
-                            <PieChart size={14} className="text-primary" />
+                            <PieChart size={14} className={isAdmin ? "text-purple-400" : "text-primary"} />
                         </div>
                         <div className="flex items-baseline gap-1">
-                            <span className="text-3xl font-bold">{quotaRemaining}</span>
-                            <span className="text-sm text-gray-500">/ {quotaTotal} còn lại</span>
+                            <span className="text-3xl font-bold">{isAdmin ? '∞' : quotaRemaining}</span>
+                            {!isAdmin && <span className="text-sm text-gray-500">/ {quotaTotal} còn lại</span>}
+                            {isAdmin && <span className="text-sm text-purple-400 font-semibold ml-1">Không giới hạn</span>}
                         </div>
-                        <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                            <motion.div 
-                                initial={{ width: 0 }}
-                                animate={{ width: `${quotaPct}%` }}
-                                className={`h-full rounded-full ${quotaPct > 80 ? 'bg-red-500' : quotaPct > 50 ? 'bg-yellow-500' : 'bg-primary'}`}
-                            />
-                        </div>
-                        <p className="text-[10px] text-gray-600">Reset mỗi ngày lúc 00:00 UTC.</p>
-                        <button className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1 mt-1">
-                            Nâng cấp gói <ChevronRight size={12} />
-                        </button>
+                        {!isAdmin ? (
+                            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                                <motion.div 
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${quotaPct}%` }}
+                                    className={`h-full rounded-full ${quotaPct > 80 ? 'bg-red-500' : quotaPct > 50 ? 'bg-yellow-500' : 'bg-primary'}`}
+                                />
+                            </div>
+                        ) : (
+                            <div className="h-2 bg-white/5 rounded-full overflow-hidden relative">
+                                <motion.div 
+                                    initial={{ width: 0 }}
+                                    animate={{ width: '100%' }}
+                                    className="h-full rounded-full bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500"
+                                />
+                                <div className="absolute inset-0 bg-white/20 animate-pulse mix-blend-overlay"></div>
+                            </div>
+                        )}
+                        <p className="text-[10px] text-gray-600">
+                            {isAdmin ? 'Quyền Admin: Tải video & dùng AI thả ga không giới hạn.' : 'Reset mỗi ngày lúc 00:00 UTC.'}
+                        </p>
+                        {!isAdmin && (
+                            <button className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1 mt-1">
+                                Nâng cấp gói <ChevronRight size={12} />
+                            </button>
+                        )}
                     </div>
 
                     {/* Tips */}

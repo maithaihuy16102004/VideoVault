@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 
-import { Check, Zap, Rocket, Crown, Building2, Star, X } from 'lucide-react';
+import { Check, Zap, Rocket, Crown, Building2, Star, X, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../shared/hooks/useAuth';
 
 const formatVND = (amount: number) => {
     if (amount === 0) return 'Miễn phí';
@@ -9,6 +10,8 @@ const formatVND = (amount: number) => {
 };
 
 const Subscriptions: React.FC = () => {
+    const { user } = useAuth();
+    const isAdmin = user?.role === 'admin';
     const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
 
     const plans = [
@@ -127,7 +130,32 @@ const Subscriptions: React.FC = () => {
                 </motion.div>
             </div>
 
-            {/* Plans Grid */}
+            {isAdmin ? (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="glass-card p-12 max-w-3xl mx-auto text-center border-purple-500/30 bg-purple-500/5 relative overflow-hidden"
+                >
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-fuchsia-500 to-pink-500" />
+                    <div className="w-20 h-20 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <ShieldCheck size={40} className="text-purple-400" />
+                    </div>
+                    <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                        Quyền Lực Tối Thượng
+                    </h2>
+                    <p className="text-gray-300 mb-6 text-lg">
+                        Tài khoản của bạn là <span className="font-bold text-white">Quản trị viên hệ thống (Admin)</span>. 
+                        Bạn đã được mở khóa tự động toàn bộ 100% tiện ích, đặc quyền tải xuống vô hạn và truy cập vào các AI cao cấp nhất mà không cần mua bất kỳ gói dịch vụ nào.
+                    </p>
+                    <div className="flex justify-center gap-4 text-sm font-semibold text-purple-300">
+                        <span className="flex items-center gap-1.5"><Check size={16} /> Tải Video Vô Hạn</span>
+                        <span className="flex items-center gap-1.5"><Check size={16} /> AI Automation (Full)</span>
+                        <span className="flex items-center gap-1.5"><Check size={16} /> Admin Dashboard</span>
+                    </div>
+                </motion.div>
+            ) : (
+                <>
+                    {/* Plans Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {plans.map((plan, i) => {
                     const price = billing === 'monthly' ? plan.monthly : plan.yearly;
@@ -215,6 +243,8 @@ const Subscriptions: React.FC = () => {
                 <p>💳 Thanh toán an toàn qua MoMo, ZaloPay, VNPAY, Visa/Mastercard</p>
                 <p>🔄 Hủy hoặc đổi gói bất cứ lúc nào • ✅ Hoàn tiền trong 7 ngày đầu</p>
             </motion.div>
+                </>
+            )}
         </div>
     );
 };
