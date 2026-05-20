@@ -29,9 +29,12 @@ builder.Services.AddScoped<DownloadService>();
 builder.Services.AddScoped<PlanService>();
 builder.Services.AddSingleton<VideoProcessorService>();
 builder.Services.AddSingleton<ScrapingService>();
-builder.Services.AddSingleton<PipelineService>();
+
 builder.Services.AddHttpClient<IAiService, AiService>();
 builder.Services.AddScoped<IAiService, AiService>();
+
+builder.Services.AddHttpClient<IPipelineService, PipelineService>();
+builder.Services.AddScoped<IPipelineService, PipelineService>();
 
 // ========== JWT AUTHENTICATION ==========
 var jwtKey = builder.Configuration["JWT:Key"];

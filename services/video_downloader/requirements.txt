@@ -1,0 +1,6 @@
+# VideoVault - Video Downloader dependencies
+# Install: pip install -r requirements.txt
+
+yt-dlp>=2024.1.0
+selenium>=4.0.0
+requests>=2.31.0

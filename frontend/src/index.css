@@ -1,37 +1,82 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 @theme {
-  --color-primary: #3b82f6;
-  --color-primary-dark: #2563eb;
-  --color-background: #0a0a0a;
-  --color-surface: #121212;
+  --color-primary: #00f0ff;
+  --color-primary-dark: #00b3cc;
+  --color-secondary: #7000ff;
+  --color-background: #030305;
+  --color-surface: #0a0a0f;
 }
 
 :root {
-  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Outfit', system-ui, Avenir, Helvetica, Arial, sans-serif;
   color-scheme: dark;
   background-color: var(--color-background);
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(112, 0, 255, 0.08), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(0, 240, 255, 0.08), transparent 25%);
+  background-attachment: fixed;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  color: white;
+  color: #f1f5f9;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Glassmorphism Utility */
+/* Advanced Glassmorphism */
 .glass-card {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 1.5rem;
-  transition: all 0.3s ease;
+  box-shadow: 
+    0 4px 24px -1px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .glass-card:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(0, 240, 255, 0.3);
+  box-shadow: 
+    0 8px 32px -4px rgba(0, 240, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Gradient Text Utility */
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Magic Input Glow */
+.magic-input-wrapper {
+  position: relative;
+  border-radius: 1rem;
+}
+
+.magic-input-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 1.1rem;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+  filter: blur(8px);
+}
+
+.magic-input-wrapper:focus-within::before {
+  opacity: 0.6;
 }
 
 /* Custom Scrollbar */

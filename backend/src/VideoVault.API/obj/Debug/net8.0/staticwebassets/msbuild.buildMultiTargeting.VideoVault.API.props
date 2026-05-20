@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\VideoVault.API.props" />
-</Project>

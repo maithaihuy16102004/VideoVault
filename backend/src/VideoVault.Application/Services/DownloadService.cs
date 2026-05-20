@@ -35,7 +35,7 @@ public class DownloadService
 
         // ── 2. DAILY QUOTA CHECK (theo plan) ──
         int dailyLimit = plan?.QuotaLimit ?? 5; // Free mặc định 5
-        if (user.QuotaUsed >= dailyLimit)
+        if (user.Role != "admin" && user.QuotaUsed >= dailyLimit)
             throw new InvalidOperationException(
                 $"Bạn đã hết lượt tải hôm nay ({dailyLimit} lượt/ngày). Nâng cấp gói để tải thêm.");
 
@@ -43,7 +43,7 @@ public class DownloadService
         int maxConcurrent = plan?.MaxConcurrentDownloads ?? 1;
         int activeCount = await _db.DownloadJobs
             .CountAsync(j => j.UserId == userId && (j.Status == "pending" || j.Status == "processing"));
-        if (activeCount >= maxConcurrent)
+        if (user.Role != "admin" && activeCount >= maxConcurrent)
             throw new InvalidOperationException(
                 $"Gói {plan?.DisplayName ?? "Free"} chỉ cho phép tải {maxConcurrent} video cùng lúc. Vui lòng chờ hoặc nâng cấp gói.");
 

@@ -11,7 +11,7 @@ public class VideoProcessorService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly string _pythonPath = "python";
-    private readonly string _scriptPath = "d:\\Work\\video_downloader.py";
+    private readonly string _scriptPath = "d:\\Work\\services\\video_downloader\\video_downloader.py";
 
     public VideoProcessorService(IServiceProvider serviceProvider)
     {

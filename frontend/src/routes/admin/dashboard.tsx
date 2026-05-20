@@ -22,9 +22,9 @@ const AdminDashboard: React.FC = () => {
     const isLoading = loadingPlatforms || loadingRevenue;
 
     // Computed stats
-    const totalDownloads = platformStats?.reduce((a: number, b: Record<string, unknown>) => a + Number(b.total_Downloads || 0), 0) || 0;
-    const totalSuccess = platformStats?.reduce((a: number, b: Record<string, unknown>) => a + Number(b.successful || 0), 0) || 0;
-    const totalFailed = platformStats?.reduce((a: number, b: Record<string, unknown>) => a + Number(b.failed || 0), 0) || 0;
+    const totalDownloads = platformStats?.reduce((a: number, b: any) => a + Number(b.total_Downloads || 0), 0) || 0;
+    const totalSuccess = platformStats?.reduce((a: number, b: any) => a + Number(b.successful || 0), 0) || 0;
+    const totalFailed = platformStats?.reduce((a: number, b: any) => a + Number(b.failed || 0), 0) || 0;
     const successRate = totalDownloads > 0 ? ((totalSuccess / totalDownloads) * 100).toFixed(1) : '0';
     const totalRevenue = revenueStats?.[0]?.total_Revenue || 0;
     const totalUsers = revenueStats?.[0]?.unique_Paying_Users || 0;
@@ -106,7 +106,7 @@ const AdminDashboard: React.FC = () => {
                     <div>
                         <p className="text-[11px] text-gray-500 uppercase">Dung lượng</p>
                         <p className="text-lg font-bold">
-                            {formatFileSize(platformStats?.reduce((a: number, b: Record<string, unknown>) => a + Number(b.total_Size || 0), 0) || 0)}
+                            {formatFileSize(platformStats?.reduce((a: number, b: any) => a + Number(b.total_Size || 0), 0) || 0)}
                         </p>
                     </div>
                 </div>
@@ -133,7 +133,7 @@ const AdminDashboard: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {platformStats?.map((stat: Record<string, unknown>, i: number) => {
+                            {platformStats?.map((stat: any, i: number) => {
                                 const total = Number(stat.total_Downloads) || 0;
                                 const success = Number(stat.successful) || 0;
                                 const rate = total > 0 ? ((success / total) * 100).toFixed(1) : '0';
@@ -185,7 +185,7 @@ const AdminDashboard: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {revenueStats.map((row: Record<string, unknown>, i: number) => (
+                                {revenueStats.map((row: any, i: number) => (
                                     <tr key={i} className="hover:bg-white/3 transition-colors">
                                         <td className="px-5 py-3.5 font-medium">{new Date(row.month).toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' })}</td>
                                         <td className="px-5 py-3.5 text-right font-mono">{row.total_Transactions}</td>

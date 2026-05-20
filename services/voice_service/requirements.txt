@@ -1,0 +1,6 @@
+# VideoVault - Voice Service (TTS) dependencies
+# Install: pip install -r requirements.txt
+
+flask>=3.0.0
+flask-cors>=4.0.0
+edge-tts>=6.1.0

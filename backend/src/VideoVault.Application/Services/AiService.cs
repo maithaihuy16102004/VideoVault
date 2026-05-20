@@ -37,7 +37,14 @@ namespace VideoVault.Application.Services
 
         public async Task<string> TranslateAsync(string text, string targetLanguage)
         {
-            string systemPrompt = $"You are a professional translator. Translate the following text accurately into {targetLanguage}. Maintain the original meaning. Respond ONLY with the translated text.";
+            string systemPrompt = $@"You are an elite cinematic subtitle localizer. Translate the following subtitle segments accurately into {targetLanguage}.
+CRITICAL GOAL: ACCURATE TRANSLATION & PREVENT VOICE OVERLAP. 
+RULES:
+1. Capture the main ideas and translate accurately while perfectly keeping the emotion of the original video.
+2. The translation MUST NOT be wordy. It must be concise enough so that when spoken by a Text-to-Speech system, it fits within the original video duration WITHOUT needing to be sped up. 
+3. DO NOT use dramatic pauses like ellipses (...) or unnecessary commas, as they cause the TTS to pause and waste time. 
+4. DO NOT arbitrarily limit words if it changes the original meaning, but prioritize direct and efficient phrasing to prevent voice overlap.
+5. Respond ONLY with the translated text.";
             string userPrompt = text;
 
             return await CallGeminiApiAsync(systemPrompt, userPrompt);

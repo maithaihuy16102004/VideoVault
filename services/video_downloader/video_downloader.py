@@ -291,6 +291,8 @@ def _download_file(video_url, title, cookies, referer='https://www.douyin.com/')
                 for chunk in resp.iter_content(chunk_size=1048576):
                     f.write(chunk)
                     downloaded += len(chunk)
+                    if downloaded > 524288000: # Giới hạn 500MB
+                        raise Exception("Kích thước video vượt quá 500MB!")
                     if total > 0:
                         pct = downloaded * 100 // total
                         if pct >= last_pct + 5 or pct == 100:
@@ -370,6 +372,7 @@ def download_with_ytdlp(url, max_quality='Original'):
         'merge_output_format': 'mp4',  # Luôn merge thành MP4
 
         # === TỐI ƯU BĂNG THÔNG ===
+        'max_filesize': 524288000,         # Giới hạn 500MB theo yêu cầu
         'http_chunk_size': 10485760,       # Chunk 10MB lách throttle
         'concurrent_fragment_downloads': 4, # Tải 4 fragment song song
         'buffersize': 1048576,             # Buffer 1MB

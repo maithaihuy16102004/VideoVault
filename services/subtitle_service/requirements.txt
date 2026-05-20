@@ -1,0 +1,6 @@
+# VideoVault - Subtitle Service (STT) dependencies
+# Install: pip install -r requirements.txt
+
+flask>=3.0.0
+faster-whisper>=1.0.0
+imageio-ffmpeg>=0.4.9

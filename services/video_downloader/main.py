@@ -15,7 +15,14 @@ Features:
 """
 
 import sys
-from downloader import download_live_stream
+import os
+
+# Add services directory to path
+_SERVICES_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _SERVICES_DIR not in sys.path:
+    sys.path.insert(0, _SERVICES_DIR)
+
+from video_downloader.downloader import download_live_stream
 
 def print_banner():
     banner = """

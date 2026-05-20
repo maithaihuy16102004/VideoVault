@@ -1,26 +1,52 @@
-
 @echo off
-REM Stop development stack and kill local dev processes
+chcp 65001 >nul
+title VideoVault - Stop All Services
+echo.
+echo ========================================
+echo    VideoVault - Stopping All Services
+echo ========================================
+echo.
 
-echo Stopping Docker Compose services (all)...
-docker-compose down
+REM Step 1: Stop Docker Compose services
+echo [1/4] Stopping Docker Compose services...
+docker-compose -f "%~dp0docker-compose.yml" down 2>nul
 if %ERRORLEVEL% NEQ 0 (
-  echo Warning: docker-compose down exited with error. Check Docker.
+    echo    [WARNING] Docker Compose down failed. Docker may not be running.
 )
 
-echo Killing frontend and backend dev processes (node.exe, dotnet.exe)...
-
-tasklist /FI "IMAGENAME eq node.exe" 2>NUL | find /I "node.exe" >NUL
-if %ERRORLEVEL% EQU 0 (
-  echo Killing node.exe processes...
-  taskkill /IM node.exe /F >nul 2>&1 || echo Failed to kill node.exe
-)
-
+REM Step 2: Kill .NET backend processes
+echo [2/4] Stopping Backend (.NET)...
 tasklist /FI "IMAGENAME eq dotnet.exe" 2>NUL | find /I "dotnet.exe" >NUL
 if %ERRORLEVEL% EQU 0 (
-  echo Killing dotnet.exe processes...
-  taskkill /IM dotnet.exe /F >nul 2>&1 || echo Failed to kill dotnet.exe
+    taskkill /IM dotnet.exe /F >nul 2>&1
+    echo    - dotnet.exe stopped
+) else (
+    echo    - dotnet.exe not running
 )
 
-echo Stop complete.
+REM Step 3: Kill Node.js frontend processes
+echo [3/4] Stopping Frontend (Node.js)...
+tasklist /FI "IMAGENAME eq node.exe" 2>NUL | find /I "node.exe" >NUL
+if %ERRORLEVEL% EQU 0 (
+    taskkill /IM node.exe /F >nul 2>&1
+    echo    - node.exe stopped
+) else (
+    echo    - node.exe not running
+)
+
+REM Step 4: Kill Python service processes
+echo [4/4] Stopping Python services...
+tasklist /FI "IMAGENAME eq python.exe" 2>NUL | find /I "python.exe" >NUL
+if %ERRORLEVEL% EQU 0 (
+    taskkill /IM python.exe /F >nul 2>&1
+    echo    - python.exe stopped
+) else (
+    echo    - python.exe not running
+)
+
+echo.
+echo ========================================
+echo    All services stopped.
+echo ========================================
+echo.
 exit /b 0

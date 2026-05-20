@@ -38,7 +38,7 @@ const Analytics: React.FC = () => {
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {[
-                    { label: 'Total Downloads', value: platformStats?.reduce((a: Record<string, unknown>, b: Record<string, unknown>) => a + Number(b.total_Downloads), 0) || 0, icon: Download, color: 'text-blue-500' },
+                    { label: 'Total Downloads', value: platformStats?.reduce((a: any, b: any) => a + Number(b.total_Downloads), 0) || 0, icon: Download, color: 'text-blue-500' },
                     { label: 'Success Rate', value: '98.4%', icon: TrendingUp, color: 'text-green-500' },
                     { label: 'Active Users', value: revenueStats?.[0]?.unique_Paying_Users || 0, icon: Users, color: 'text-purple-500' },
                     { label: 'Monthly Revenue', value: `$${revenueStats?.[0]?.total_Revenue || 0}`, icon: BarChart3, color: 'text-yellow-500' },
@@ -81,7 +81,7 @@ const Analytics: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {platformStats?.map((stat: Record<string, unknown>, i: number) => (
+                            {platformStats?.map((stat: any, i: number) => (
                                 <tr key={i} className="hover:bg-white/5 transition-colors">
                                     <td className="px-6 py-4 capitalize font-medium">{stat.platform}</td>
                                     <td className="px-6 py-4 text-right">{stat.total_Downloads}</td>

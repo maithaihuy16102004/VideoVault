@@ -8,7 +8,12 @@ import re
 import requests
 from typing import List, Dict, Any, Optional
 
-from utils import (
+# Add parent directory (services/) to path for cross-package imports
+_SERVICES_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _SERVICES_DIR not in sys.path:
+    sys.path.insert(0, _SERVICES_DIR)
+
+from common.utils import (
     extract_url,
     is_douyin_url,
     is_tiktok_url,
@@ -17,7 +22,7 @@ from utils import (
     _collect_all_quality_urls,
     _extract_from_render_data,
 )
-from selenium_driver import _setup_edge, _setup_chrome
+from scraper.selenium_driver import _setup_edge, _setup_chrome
 
 # --------------------------------------------------------------------------- #
 # Helper functions
