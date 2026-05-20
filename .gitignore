@@ -48,6 +48,93 @@ packages/
 
 # Local app settings and launch profiles
 appsettings.Development.json
+appsettings.*.json
+
+# =========================
+# Node / Frontend
+# =========================
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+.parcel-cache/
+.next/
+.nuxt/
+*.pem
+
+# =========================
+# Python / Services
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg
+
+# =========================
+# IDE / Editors
+# =========================
+*.code-workspace
+
+# =========================
+# Environment & Secrets
+# =========================
+.env
+.env.local
+.env.*.local
+secrets.json
+
+# =========================
+# Build & Artifacts
+# =========================
+dist/
+build/
+.cache/
+*.cache
+
+# =========================
+# Media & Large Files
+# =========================
+Downloads/
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.flv
+*.wmv
+*.webm
+preview_cache/
+temp_audio/
+temp_stt/
+
+# =========================
+# Database & Backups
+# =========================
+*.db
+*.sqlite
+*.sqlite3
+backup/
+*.dump
+
+# =========================
+# OS Specific
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
 appsettings.Production.json
 appsettings.*.local.json
 launchSettings.json
