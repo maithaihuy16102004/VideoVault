@@ -59,6 +59,30 @@ services:
       retries: 3
     restart: unless-stopped
 
+  # ========== BACKEND API ==========
+  api:
+    build:
+      context: ./backend
+    container_name: videovault-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+      - minio
+    restart: unless-stopped
+
+  # ========== FRONTEND ==========
+  frontend:
+    build:
+      context: ./frontend
+    container_name: videovault-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   redis_data:
