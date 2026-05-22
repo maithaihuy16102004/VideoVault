@@ -21,9 +21,13 @@ interface AppState {
   addDownload: (url: string) => void
   updateProgress: (id: string, progress: number) => void
   completeDownload: (id: string, title: string, size: string) => void
+  analyzedChannel: any | null
+  setAnalyzedChannel: (channel: any) => void
 }
 
 export const useStore = create<AppState>((set) => ({
+  analyzedChannel: null,
+  setAnalyzedChannel: (channel) => set({ analyzedChannel: channel }),
   quota: {
     used: 12,
     total: 30,

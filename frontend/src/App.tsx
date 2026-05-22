@@ -16,7 +16,8 @@ import {
   PieChart,
   Sparkles
 } from 'lucide-react'
-import { motion, AnimatePresence, Variants } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import type { Variants } from 'framer-motion'
 import { useStore } from './store/useStore'
 
 const containerVariants: Variants = {
@@ -179,7 +180,6 @@ const DownloadItem = ({ item }: { item: any }) => {
 function App() {
   const { downloads, addDownload } = useStore()
   const [url, setUrl] = useState('')
-  const [isFocused, setIsFocused] = useState(false)
 
   const handleDownload = (e: React.FormEvent) => {
     e.preventDefault()
@@ -237,8 +237,6 @@ function App() {
                     type="text" 
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
-                    onFocus={() => setIsFocused(true)}
-                    onBlur={() => setIsFocused(false)}
                     placeholder="Paste URL from Douyin, TikTok, Xiaohongshu..."
                     className="w-full bg-[#0d0d14] border border-white/10 rounded-[1rem] px-6 py-5 focus:outline-none focus:border-primary/50 transition-all text-lg pr-44 placeholder:text-gray-600 font-medium"
                   />

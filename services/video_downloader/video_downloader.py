@@ -6,6 +6,7 @@ import time
 import sys
 import requests
 import urllib.parse
+import uuid
 
 # Fix encoding cho Windows terminal
 if sys.stdout.encoding != 'utf-8':
@@ -18,6 +19,11 @@ def extract_url(text):
     url_pattern = r'https?://[^\s]+'
     urls = re.findall(url_pattern, text)
     return urls[0] if urls else None
+
+def extract_urls(text):
+    """Regex tìm danh sách URL bắt đầu bằng http hoặc https"""
+    url_pattern = r'https?://[^\s]+'
+    return re.findall(url_pattern, text)
 
 def is_douyin_url(url):
     """Kiểm tra xem URL có phải Douyin không"""
@@ -35,7 +41,153 @@ def is_bilibili_url(url):
     """Kiểm tra xem URL có phải Bilibili không"""
     return 'bilibili.com' in url or 'bilibili.tv' in url
 
-def download_with_selenium(url, platform='douyin', max_quality='Original'):
+def _extract_xhs_video_data(driver, max_height=99999):
+    """Extract video URL and title from XHS __INITIAL_STATE__ data directly via JS to avoid huge JSON serialization issues."""
+    try:
+        current_url = driver.current_url
+        import re as _re
+        post_id_match = _re.search(r'/(?:item|explore|discovery/item)/([a-f0-9]+)', current_url)
+        target_id = post_id_match.group(1) if post_id_match else ''
+
+        js_script = """
+            var target_id = arguments[0];
+            var max_height = arguments[1];
+            
+            var state = window.__INITIAL_STATE__ || window.__INITIAL_SSR_STATE__;
+            if (!state) return { error: 'No state found' };
+            
+            var noteMap = null;
+            if (state.note && state.note.noteDetailMap) {
+                noteMap = state.note.noteDetailMap;
+            } else if (state.note && state.note.note) {
+                noteMap = state.note.note;
+            } else if (state.feed && state.feed.notes) {
+                // Sometimes it's in feed.notes? (Unlikely for direct link but possible)
+                noteMap = {};
+                for (var i = 0; i < state.feed.notes.length; i++) {
+                    var n = state.feed.notes[i];
+                    if (n.id) noteMap[n.id] = n;
+                }
+            }
+            if (!noteMap) {
+                // Log what properties exist in state
+                return { error: 'No noteMap found', state_keys: Object.keys(state) };
+            }
+            
+            var noteData = null;
+            if (target_id && noteMap[target_id]) {
+                noteData = noteMap[target_id];
+            } else if (noteMap['undefined']) {
+                noteData = noteMap['undefined'];
+            } else if (noteMap['null']) {
+                noteData = noteMap['null'];
+            }
+            
+            if (!noteData) {
+                return { error: 'Target ID not found in noteMap and no undefined fallback. Post might be 404/deleted.' };
+            }
+            
+            var note = noteData.note || noteData;
+            var title = note.title || note.desc || '';
+            var desc = note.desc || '';
+            var tags = [];
+            if (note.tagList) {
+                for (var t=0; t<note.tagList.length; t++) {
+                    tags.push(note.tagList[t].name || '');
+                }
+            }
+            var video_url = '';
+            var image_urls = [];
+            
+            if (note.video && note.video.media && note.video.media.stream) {
+                var stream = note.video.media.stream;
+                var codecs = ['h264', 'h265', 'av1'];
+                for (var i=0; i<codecs.length; i++) {
+                    var codec_streams = stream[codecs[i]];
+                    if (codec_streams && codec_streams.length > 0) {
+                        codec_streams.sort((a, b) => (b.height || 0) - (a.height || 0));
+                        for (var j=0; j<codec_streams.length; j++) {
+                            var s = codec_streams[j];
+                            var h = s.height || 0;
+                            if (h > max_height) continue;
+                            
+                            var master_url = s.masterUrl || s.master_url || '';
+                            var backup_urls = s.backupUrls || s.backup_urls || [];
+                            
+                            if (master_url) {
+                                video_url = master_url; break;
+                            } else if (backup_urls && backup_urls.length > 0) {
+                                video_url = backup_urls[0]; break;
+                            }
+                        }
+                    }
+                    if (video_url) break;
+                }
+            }
+            
+            if (!video_url && note.video && note.video.consumer) {
+                var origin_key = note.video.consumer.originVideoKey || '';
+                if (origin_key) {
+                    video_url = 'https://sns-video-bd.xhscdn.com/' + origin_key;
+                }
+            }
+            
+            // Extract images 
+            if (note.imageList && note.imageList.length > 0) {
+                for (var i = 0; i < note.imageList.length; i++) {
+                    var img = note.imageList[i];
+                    var img_url = img.urlDefault || img.urlOriginal || img.url || '';
+                    if (img_url) {
+                        // Ensure it's a full URL
+                        if (img_url.startsWith('//')) img_url = 'https:' + img_url;
+                        image_urls.push(img_url);
+                    }
+                }
+            }
+            
+            return { title: title, desc: desc, tags: tags, video_url: video_url, image_urls: image_urls, note_found: true };
+        """
+        result = driver.execute_script(js_script, target_id, max_height)
+        if result:
+            if 'error' in result:
+                print(f"   ⚠️ JS Extractor Debug: {result}")
+            return result.get('video_url'), result.get('title'), result.get('image_urls', []), result.get('desc', ''), result.get('tags', [])
+
+            
+    except Exception as e:
+        print(f"   ⚠️ XHS JS Extraction error: {e}")
+        
+    return None, None, [], '', []
+
+    if not video_url:
+        try:
+            video_url = driver.execute_script("""
+                var meta = document.querySelector('meta[property="og:video"], meta[name="og:video"]');
+                return meta ? meta.content : null;
+            """) or None
+        except: pass
+    
+    # Method 3: og:title for title fallback
+    if not title:
+        try:
+            title = driver.execute_script("""
+                var meta = document.querySelector('meta[property="og:title"], meta[name="og:title"]');
+                return meta ? meta.content : null;
+            """)
+        except: pass
+    
+    # Method 4: DOM title selectors
+    if not title:
+        try:
+            title = driver.execute_script("""
+                var el = document.querySelector('#detail-title, .title, .note-content .title, [class*="title"]');
+                return el ? el.textContent.trim() : null;
+            """) or None
+        except: pass
+    
+    return video_url, title
+
+def download_with_selenium(url, platform='douyin', max_quality='Original', download_type='auto'):
     """
     Tải video ở CHẤT LƯỢNG GỐC bằng cách phân tích API/DOM từ trình duyệt.
     Hỗ trợ: douyin, tiktok, xiaohongshu
@@ -81,11 +233,33 @@ def download_with_selenium(url, platform='douyin', max_quality='Original'):
         time.sleep(7 if platform != 'xhs' else 5) # Chờ load video
         
         real_url = driver.current_url
-        title = driver.title
-        for suffix in [' - 抖音', ' | TikTok', ' - 小红书', ' | 小红书']:
-            title = title.replace(suffix, '')
+        
+        # ── Platform-specific extraction ──
+        xhs_video_url = None
+        xhs_image_urls = []
+        title = ''
+        desc = ''
+        tags = []
+        if platform == 'xhs':
+            xhs_result = _extract_xhs_video_data(driver, max_height)
+            if len(xhs_result) == 5:
+                xhs_video_url, xhs_title, xhs_image_urls, desc, tags = xhs_result
+            elif len(xhs_result) == 3:
+                xhs_video_url, xhs_title, xhs_image_urls = xhs_result
+            else:
+                xhs_video_url, xhs_title = xhs_result
+            title = xhs_title or ''
+        
+        if not title or title in ['', None]:
+            title = driver.title
+            for suffix in [' - 抖音', ' | TikTok', ' - 小红书', ' | 小红书', ' - 你的生活方式社区', ' - 你的生活指南']:
+                title = title.replace(suffix, '')
+        
         title = re.sub(r'[\\/:*?"<>|]', '_', title.strip())[:80]
-        if not title: title = f'{platform}_video_{int(time.time())}'
+        if not title:
+            # Extract post ID from URL as fallback
+            post_id_match = re.search(r'/(?:item|explore|discovery/item)/([a-f0-9]+)', real_url)
+            title = f'{platform}_{post_id_match.group(1) if post_id_match else int(time.time())}'
         
         print(f"   📹 Tiêu đề: {title}")
         
@@ -149,9 +323,54 @@ def download_with_selenium(url, platform='douyin', max_quality='Original'):
         driver.quit()
         driver = None
 
-        # THỬ TẢI THEO THỨ TỰ ƯU TIÊN
-        all_urls = api_video_urls + [{'url': u, 'label': 'DOM Source'} for u in dom_video_urls]
-        if render_url: all_urls.append({'url': render_url, 'label': 'Render Data'})
+        # THỬ TẢI ẢNH (NẾU DOWNLOAD_TYPE = auto, images, both)
+        download_img_success = False
+        if platform == 'xhs' and xhs_image_urls and download_type in ['auto', 'images', 'both']:
+            # Nếu auto, chỉ tải ảnh khi không có video
+            if download_type == 'auto' and (xhs_video_url or api_video_urls or render_url or dom_video_urls):
+                pass
+            else:
+                print(f"   🖼️ Tìm thấy {len(xhs_image_urls)} ảnh. Đang tải và nén thành file zip...")
+                import zipfile
+                import requests
+                import io
+                if not os.path.exists('Downloads'):
+                    os.makedirs('Downloads')
+                zip_filename = f"Downloads/{title}.zip"
+                try:
+                    with zipfile.ZipFile(zip_filename, 'w') as zipf:
+                        for idx, img_url in enumerate(xhs_image_urls):
+                            headers = {
+                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+                                'Referer': 'https://www.xiaohongshu.com/'
+                            }
+                            resp = requests.get(img_url, headers=headers, timeout=15)
+                            if resp.status_code == 200:
+                                ext = 'jpg'
+                                if 'image/png' in resp.headers.get('Content-Type', ''): ext = 'png'
+                                elif 'image/webp' in resp.headers.get('Content-Type', ''): ext = 'webp'
+                                elif 'image/gif' in resp.headers.get('Content-Type', ''): ext = 'gif'
+                                zipf.writestr(f"{idx+1}.{ext}", resp.content)
+                    file_size_mb = os.path.getsize(zip_filename) / (1024 * 1024)
+                    print(f"\n✅ Tải ảnh thành công! ({file_size_mb:.1f} MB)")
+                    print(f"   📁 File: {os.path.abspath(zip_filename)}")
+                    download_img_success = True
+                    if download_type == 'images':
+                        return True
+                except Exception as e:
+                    print(f"\n❌ Lỗi tải ảnh: {e}")
+                    if download_type == 'images': return False
+
+        # THỬ TẢI VIDEO THEO THỨ TỰ ƯU TIÊN
+        all_urls = list(api_video_urls)
+        # XHS: __INITIAL_STATE__ video URL is most reliable
+        if xhs_video_url:
+            if not xhs_video_url.startswith('http'):
+                xhs_video_url = 'https:' + xhs_video_url
+            all_urls.insert(0, {'url': xhs_video_url, 'label': 'XHS InitialState'})
+        if render_url: 
+            all_urls.append({'url': render_url, 'label': 'Render Data'})
+        all_urls.extend([{'url': u, 'label': 'DOM Source'} for u in dom_video_urls])
 
         for item in all_urls:
             url_to_dl = item['url']
@@ -160,6 +379,7 @@ def download_with_selenium(url, platform='douyin', max_quality='Original'):
             if _download_file(url_to_dl, title, session_cookies, referer):
                 return True
         
+        if download_img_success: return True
         print("❌ Không thể tải video này bằng trình duyệt.")
         return False
     finally:
@@ -281,7 +501,8 @@ def _download_file(video_url, title, cookies, referer='https://www.douyin.com/')
     try:
         resp = session.get(video_url, stream=True, timeout=120)
         if resp.status_code == 200:
-            filename = 'Downloads/{}.mp4'.format(title)
+            unique_id = str(uuid.uuid4())[:8]
+            filename = 'Downloads/{}_{}.mp4'.format(title, unique_id)
             total = int(resp.headers.get('content-length', 0))
             downloaded = 0
             last_pct = -5  # Chỉ in mỗi 5% để giảm I/O overhead
@@ -419,8 +640,10 @@ def download_with_ytdlp(url, max_quality='Original'):
                 file_size_mb = os.path.getsize(final_file) / (1024 * 1024)
             print(f"\n✅ Tải thành công! ({file_size_mb:.1f} MB)")
             print(f"   📁 File: {os.path.abspath(final_file)}")
+            return True
     except Exception as e:
-        print(f"\n❌ Lỗi: {e}")
+        print(f"\n❌ Lỗi yt-dlp: {e}")
+        return False
 
 def scrape_account_videos(username, platform='douyin', limit=50):
     """
@@ -621,38 +844,102 @@ def scrape_hashtag_videos(hashtag, platform='douyin', limit=50):
             try: driver.quit()
             except: pass
 
-def download_video(input_text, max_quality='Original'):
-    """Hàm chính: tải video từ link, giới hạn chất lượng theo gói dịch vụ"""
-    url = extract_url(input_text)
+def extract_post_info(input_text):
+    """
+    Trích xuất thông tin title, description, tags từ URL cho mode info.
+    Sử dụng yt-dlp để lấy info nhanh, nếu không được thử request cơ bản.
+    """
+    urls = extract_urls(input_text)
+    if not urls:
+        return {"error": "Không tìm thấy URL hợp lệ."}
     
-    if not url:
-        print("\n❌ Không tìm thấy link video hợp lệ trong đoạn văn bản bạn nhập.")
-        return
+    url = urls[0]
+    result = {"title": "", "description": "", "tags": [], "platform": "unknown"}
+    
+    if is_douyin_url(url): result["platform"] = "douyin"
+    elif is_tiktok_url(url): result["platform"] = "tiktok"
+    elif is_xhs_url(url): result["platform"] = "xhs"
+    
+    # Try yt-dlp first
+    try:
+        opts = {'quiet': True, 'no_warnings': True, 'ignoreerrors': True}
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            if info:
+                result["title"] = info.get("title", "")
+                result["description"] = info.get("description", "")
+                result["tags"] = info.get("tags", [])
+                if result["title"] or result["description"]:
+                    return result
+    except:
+        pass
+        
+    # Fallback to selenium for XHS or others
+    driver = None
+    for setup_func in [_setup_edge, _setup_chrome]:
+        try:
+            driver = setup_func(enable_logging=False)
+            break
+        except:
+            continue
+            
+    if driver:
+        try:
+            driver.get(url)
+            time.sleep(5)
+            if result["platform"] == 'xhs':
+                xhs_res = _extract_xhs_video_data(driver)
+                if len(xhs_res) == 5:
+                    _, title, _, desc, tags = xhs_res
+                    result["title"] = title or ""
+                    result["description"] = desc or ""
+                    result["tags"] = tags or []
+            else:
+                result["title"] = driver.title
+        finally:
+            driver.quit()
+        return result
+        
+    return {"error": "Không thể trích xuất thông tin từ URL này."}
 
+def download_video(input_text, max_quality='Original', download_type='auto'):
+    """
+    Xử lý link đầu vào (hỗ trợ cả text chứa link), tải bằng Selenium (chất lượng gốc)
+    Nếu thất bại sẽ tự động fallback sang yt-dlp.
+    """
+    urls = extract_urls(input_text)
+    if not urls:
+        raise Exception("Không tìm thấy đường dẫn (URL) hợp lệ trong nội dung bạn nhập.")
+    
     if not os.path.exists('Downloads'):
         os.makedirs('Downloads')
 
-    print("\n🚀 Đang xử lý: {}".format(url))
-    print("   📐 Chất lượng tối đa: {}".format(max_quality))
-
-    try:
-        if is_douyin_url(url):
-            success = download_with_selenium(url, 'douyin', max_quality)
-            if not success: download_with_ytdlp(url, max_quality)
-        elif is_tiktok_url(url):
-            success = download_with_selenium(url, 'tiktok', max_quality)
-            if not success: download_with_ytdlp(url, max_quality)
-        elif is_xhs_url(url):
-            success = download_with_selenium(url, 'xhs', max_quality)
-            if not success: download_with_ytdlp(url, max_quality)
-        elif is_bilibili_url(url):
-            print("   📺 Đang xử lý video Bilibili...")
-            download_with_ytdlp(url, max_quality)
-        else:
-            download_with_ytdlp(url, max_quality)
-    except Exception as e:
-        print("\n❌ Có lỗi xảy ra: {}".format(e))
-        raise e
+    for url in urls:
+        print(f"\n🚀 Đang xử lý: {url}")
+        print(f"   📐 Chất lượng tối đa: {max_quality}")
+        
+        try:
+            success = False
+            if is_douyin_url(url):
+                success = download_with_selenium(url, 'douyin', max_quality, download_type)
+                if not success and download_type != 'images': success = download_with_ytdlp(url, max_quality)
+            elif is_tiktok_url(url):
+                success = download_with_selenium(url, 'tiktok', max_quality, download_type)
+                if not success and download_type != 'images': success = download_with_ytdlp(url, max_quality)
+            elif is_xhs_url(url):
+                success = download_with_selenium(url, 'xhs', max_quality, download_type)
+                if not success and download_type != 'images': success = download_with_ytdlp(url, max_quality)
+            elif is_bilibili_url(url):
+                print("   📺 Đang xử lý video Bilibili...")
+                success = download_with_ytdlp(url, max_quality)
+            else:
+                success = download_with_ytdlp(url, max_quality)
+                
+            if not success:
+                raise Exception("Không thể tải video từ URL này. (Video có thể không tồn tại, bị ẩn, hoặc là bài đăng dạng ảnh)")
+        except Exception as e:
+            print(f"\n❌ Có lỗi xảy ra với url {url}: {e}")
+            raise e
 
 if __name__ == "__main__":
     import argparse
@@ -660,8 +947,9 @@ if __name__ == "__main__":
     parser.add_argument("--url", help="Video URL to download")
     parser.add_argument("--quality", default="Original", help="Max quality: 720p, 1080p, 4K, Original")
     parser.add_argument("--json", action="store_true", help="Output result as JSON")
-    parser.add_argument("--mode", default="download", choices=['download', 'account', 'hashtag'],
-                        help="Mode: download (default), account (scrape account), hashtag (scrape hashtag)")
+    parser.add_argument("--mode", default="download", choices=['download', 'account', 'hashtag', 'info'],
+                        help="Mode: download (default), account (scrape account), hashtag (scrape hashtag), info")
+    parser.add_argument("--download-type", default="auto", choices=['auto', 'video', 'images', 'both'], help="Type of media to download")
     parser.add_argument("--username", help="Username for account scraping mode")
     parser.add_argument("--hashtag", help="Hashtag for hashtag scraping mode")
     parser.add_argument("--platform", default="douyin", help="Platform: douyin, tiktok, xhs")
@@ -686,10 +974,19 @@ if __name__ == "__main__":
         print(json.dumps(result, ensure_ascii=False))
         sys.exit(0 if 'error' not in result else 1)
 
+    # ── Info mode ──
+    if args.mode == 'info':
+        if not args.url:
+            print(json.dumps({"error": "--url is required for info mode"}))
+            sys.exit(1)
+        result = extract_post_info(args.url)
+        print(json.dumps(result, ensure_ascii=False))
+        sys.exit(0 if 'error' not in result else 1)
+
     # ── Download mode ──
     if args.url:
         try:
-            download_video(args.url, args.quality)
+            download_video(args.url, args.quality, args.download_type)
             if args.json:
                 print(json.dumps({"success": True, "url": args.url}))
             sys.exit(0)

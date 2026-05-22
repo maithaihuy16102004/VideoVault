@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Hash, Search, Download, CheckCircle2, TrendingUp, Loader2, AlertCircle, ChevronDown, Globe, Play } from 'lucide-react';
+import { Hash, Download, CheckCircle2, TrendingUp, Loader2, AlertCircle, ChevronDown, Globe, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { downloadApi } from '@/shared/api/download.api';
 import type { ScrapedVideo } from '@/shared/types/download';

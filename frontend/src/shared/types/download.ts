@@ -9,15 +9,19 @@ export interface DownloadJobDto {
     progress: number;
     fileSize: number | null;
     fileUrl: string | null;
+    thumbnailUrl?: string | null;
     errorMessage: string | null;
     createdAt: string;
     completedAt: string | null;
     subtitlePath: string | null;
+    fileExtension: string | null;
+    downloadType: string;
 }
 
 export interface CreateDownloadRequest {
     url: string;
     quality?: string;
+    downloadType?: string;
 }
 
 /** ── Types for Account / Hashtag scraping ── */
@@ -53,6 +57,7 @@ export interface HashtagInfoDto {
 export interface BatchDownloadRequest {
     urls: string[];
     quality?: string;
+    downloadType?: string;
 }
 
 export interface BatchDownloadResponse {

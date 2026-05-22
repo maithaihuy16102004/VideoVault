@@ -1,20 +1,77 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
     Workflow, Zap, Languages, Mic2, Sparkles, 
-    PlayCircle, CheckCircle2, ArrowRight, Settings2
+    PlayCircle, CheckCircle2, ArrowRight, Settings2, Loader2, Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { startDubbingPipeline, getDubbingStatus } from '@/shared/api/dubbing.api';
+import type { DubbingStatusResponse } from '@/shared/api/dubbing.api';
 
 const AutoPipeline: React.FC = () => {
     const [step, setStep] = useState(1);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [config, setConfig] = useState({
+    const [videoUrl, setVideoUrl] = useState('');
+    const [jobId, setJobId] = useState<string | null>(null);
+    const [jobStatus, setJobStatus] = useState<DubbingStatusResponse | null>(null);
+    const [isStarting, setIsStarting] = useState(false);
+    
+    const [config] = useState({
         translate: true,
         voiceover: true,
         burnSubtitles: true,
         rewrite: 'viral',
-        voiceTone: 'excited'
+        voiceTone: 'excited',
+        targetLanguage: 'vi',
+        ttsEngine: 'edge-tts'
     });
+
+    const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    useEffect(() => {
+        if (jobId && jobStatus?.status !== 'completed' && jobStatus?.status !== 'failed') {
+            pollingIntervalRef.current = setInterval(async () => {
+                try {
+                    const status = await getDubbingStatus(jobId);
+                    setJobStatus(status);
+                    
+                    // Map progress to steps
+                    if (status.progress < 30) setStep(2);
+                    else if (status.progress < 85) setStep(3);
+                    else setStep(4);
+                    
+                    if (status.status === 'completed' || status.status === 'failed') {
+                        if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+                    }
+                } catch (error) {
+                    console.error("Polling error", error);
+                }
+            }, 2000);
+        }
+        
+        return () => {
+            if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+        };
+    }, [jobId, jobStatus?.status]);
+
+    const handleStartPipeline = async () => {
+        if (!videoUrl) return;
+        setIsStarting(true);
+        try {
+            const res = await startDubbingPipeline({
+                videoPath: videoUrl, // backend video_downloader might need this format or raw url
+                targetLanguage: config.targetLanguage,
+                ttsEngine: config.ttsEngine,
+                enableVoiceClone: false,
+                enableEmotion: true
+            });
+            setJobId(res.jobId);
+            setStep(2);
+        } catch (error) {
+            console.error("Failed to start pipeline", error);
+            alert("Failed to start dubbing pipeline. Check console.");
+        } finally {
+            setIsStarting(false);
+        }
+    };
 
     const steps = [
         { id: 1, label: 'Input Source', icon: PlayCircle },
@@ -75,14 +132,17 @@ const AutoPipeline: React.FC = () => {
                                 <div className="flex gap-4">
                                     <input 
                                         type="text" 
-                                        placeholder="https://v.douyin.com/..."
+                                        placeholder="Dán link video hoặc đường dẫn file..."
+                                        value={videoUrl}
+                                        onChange={(e) => setVideoUrl(e.target.value)}
                                         className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-primary/50 transition-colors"
                                     />
                                     <button 
-                                        onClick={() => setStep(2)}
-                                        className="bg-primary hover:bg-primary-dark px-8 rounded-2xl font-bold flex items-center gap-2 transition-all active:scale-95"
+                                        onClick={handleStartPipeline}
+                                        disabled={!videoUrl || isStarting}
+                                        className="bg-primary hover:bg-primary-dark px-8 rounded-2xl font-bold flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50"
                                     >
-                                        Tiếp tục <ArrowRight size={18} />
+                                        {isStarting ? <Loader2 size={18} className="animate-spin" /> : 'Tiếp tục'} <ArrowRight size={18} />
                                     </button>
                                 </div>
                             </div>
@@ -125,14 +185,79 @@ const AutoPipeline: React.FC = () => {
                                 <Sparkles className="absolute inset-0 m-auto text-primary" size={32} />
                             </div>
                             <h2 className="text-2xl font-bold mb-2">Đang phân tích Video...</h2>
-                            <p className="text-gray-500 max-w-sm">Hệ thống đang trích xuất âm thanh, nhận diện giọng nói và chuẩn bị dịch thuật.</p>
+                            <p className="text-gray-500 max-w-sm mb-4">Hệ thống đang trích xuất âm thanh, nhận diện giọng nói và chuẩn bị dịch thuật.</p>
                             
-                            <button 
-                                onClick={() => setStep(3)}
-                                className="mt-12 text-sm text-gray-500 hover:text-white transition-colors"
-                            >
-                                Bỏ qua bước này (Demo)
-                            </button>
+                            {jobStatus && (
+                                <div className="w-full max-w-md bg-white/5 rounded-full h-2 mb-2">
+                                    <div className="bg-primary h-2 rounded-full transition-all duration-500" style={{ width: `${jobStatus.progress}%` }}></div>
+                                </div>
+                            )}
+                            <p className="text-xs text-primary font-bold">{jobStatus?.currentStage || "Khởi tạo..."} - {jobStatus?.progress || 0}%</p>
+                        </motion.div>
+                    )}
+
+                    {step === 3 && (
+                        <motion.div 
+                            key="step3"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="flex flex-col items-center justify-center py-12 text-center"
+                        >
+                            <div className="relative w-24 h-24 mb-8">
+                                <div className="absolute inset-0 border-4 border-primary/20 rounded-full" />
+                                <motion.div 
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                                    className="absolute inset-0 border-4 border-t-primary rounded-full"
+                                />
+                                <Mic2 className="absolute inset-0 m-auto text-primary" size={32} />
+                            </div>
+                            <h2 className="text-2xl font-bold mb-2">Lồng tiếng & Sync Subtitle</h2>
+                            <p className="text-gray-500 max-w-sm mb-4">Đang tạo giọng nói AI và khớp thời gian với video gốc.</p>
+                            
+                            {jobStatus && (
+                                <div className="w-full max-w-md bg-white/5 rounded-full h-2 mb-2">
+                                    <div className="bg-primary h-2 rounded-full transition-all duration-500" style={{ width: `${jobStatus.progress}%` }}></div>
+                                </div>
+                            )}
+                            <p className="text-xs text-primary font-bold">{jobStatus?.currentStage || "Đang xử lý..."} - {jobStatus?.progress || 0}%</p>
+                        </motion.div>
+                    )}
+
+                    {step === 4 && (
+                        <motion.div 
+                            key="step4"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="flex flex-col items-center justify-center py-12 text-center"
+                        >
+                            <div className="w-24 h-24 mb-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                                <CheckCircle2 className="text-green-500" size={48} />
+                            </div>
+                            <h2 className="text-2xl font-bold mb-2">Hoàn tất!</h2>
+                            <p className="text-gray-500 max-w-sm mb-8">Video của bạn đã được Việt hóa thành công.</p>
+                            
+                            {jobStatus?.status === 'completed' ? (
+                                <a 
+                                    href={`http://localhost:5141/api/v1/dubbing/${jobId}/download`}
+                                    target="_blank" rel="noreferrer"
+                                    className="bg-primary hover:bg-primary-dark px-8 py-4 rounded-2xl font-bold flex items-center gap-3 transition-all active:scale-95"
+                                >
+                                    <Download size={20} /> Tải Video Về Máy
+                                </a>
+                            ) : jobStatus?.status === 'failed' ? (
+                                <div className="text-red-500 bg-red-500/10 p-4 rounded-xl">
+                                    <p className="font-bold">Lỗi xử lý:</p>
+                                    <p className="text-sm">{jobStatus.errorMessage}</p>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center">
+                                    <Loader2 className="animate-spin text-primary mb-2" size={24} />
+                                    <p className="text-xs text-gray-500">Đang render video cuối...</p>
+                                </div>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>

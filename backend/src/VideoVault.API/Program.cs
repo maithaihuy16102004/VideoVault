@@ -36,6 +36,9 @@ builder.Services.AddScoped<IAiService, AiService>();
 builder.Services.AddHttpClient<IPipelineService, PipelineService>();
 builder.Services.AddScoped<IPipelineService, PipelineService>();
 
+builder.Services.AddHttpClient<IDubbingPipelineService, DubbingPipelineService>();
+builder.Services.AddScoped<IDubbingPipelineService, DubbingPipelineService>();
+
 // ========== JWT AUTHENTICATION ==========
 var jwtKey = builder.Configuration["JWT:Key"];
 if (string.IsNullOrEmpty(jwtKey))

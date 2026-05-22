@@ -22,6 +22,85 @@ namespace VideoVault.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("VideoVault.Domain.Entities.AiAnalysisLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<double>("ConfidenceScore")
+                        .HasColumnType("double precision")
+                        .HasColumnName("confidence_score");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("ExtractedFeaturesJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("extracted_features_json");
+
+                    b.Property<string>("LlmVersion")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("llm_version");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("platform");
+
+                    b.Property<double>("PredictedViralScore")
+                        .HasColumnType("double precision")
+                        .HasColumnName("predicted_viral_score");
+
+                    b.Property<double>("PredictedWatchTime")
+                        .HasColumnType("double precision")
+                        .HasColumnName("predicted_watch_time");
+
+                    b.Property<string>("RankingModelVersion")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("ranking_model_version");
+
+                    b.Property<string>("RawLlmPrompt")
+                        .HasColumnType("text")
+                        .HasColumnName("raw_llm_prompt");
+
+                    b.Property<string>("RawLlmResponse")
+                        .HasColumnType("text")
+                        .HasColumnName("raw_llm_response");
+
+                    b.Property<string>("RecommendationLevel")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("recommendation_level");
+
+                    b.Property<bool>("UsedMetricRecovery")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("used_metric_recovery");
+
+                    b.Property<string>("VideoUrl")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("video_url");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ai_analysis_logs", (string)null);
+                });
+
             modelBuilder.Entity("VideoVault.Domain.Entities.AuditLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -83,6 +162,136 @@ namespace VideoVault.Infrastructure.Migrations
                     b.ToTable("audit_logs", (string)null);
                 });
 
+            modelBuilder.Entity("VideoVault.Domain.Entities.CampaignRoi", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<int>("ActualFollowersGained")
+                        .HasColumnType("integer")
+                        .HasColumnName("actual_followers_gained");
+
+                    b.Property<decimal>("ActualRoiRatio")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("actual_roi_ratio");
+
+                    b.Property<decimal>("ActualSpend")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("actual_spend");
+
+                    b.Property<DateTime?>("AnalyzedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("analyzed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("FeedbackNotes")
+                        .HasColumnType("text")
+                        .HasColumnName("feedback_notes");
+
+                    b.Property<bool>("IsUsedForTraining")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_used_for_training");
+
+                    b.Property<decimal>("PredictedCpm")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("predicted_cpm");
+
+                    b.Property<int>("PredictedFollowers")
+                        .HasColumnType("integer")
+                        .HasColumnName("predicted_followers");
+
+                    b.Property<decimal>("PredictedRoiRatio")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("predicted_roi_ratio");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("VideoId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("video_id");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("campaign_rois", (string)null);
+                });
+
+            modelBuilder.Entity("VideoVault.Domain.Entities.CreatorDna", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<string>("AveragePacing")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("average_pacing");
+
+                    b.Property<double>("AverageRetention")
+                        .HasColumnType("double precision")
+                        .HasColumnName("average_retention");
+
+                    b.Property<string>("ChannelUrl")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("channel_url");
+
+                    b.Property<string>("HookPattern")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("hook_pattern");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_updated")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("PrimaryStyle")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("primary_style");
+
+                    b.Property<int>("TotalVideosAnalyzed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("total_videos_analyzed");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("username");
+
+                    b.Property<string>("VectorDataJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("vector_data_json");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("creator_dnas", (string)null);
+                });
+
             modelBuilder.Entity("VideoVault.Domain.Entities.DownloadJob", b =>
                 {
                     b.Property<Guid>("Id")
@@ -112,6 +321,10 @@ namespace VideoVault.Infrastructure.Migrations
                         .HasColumnType("character varying(20)")
                         .HasDefaultValue("auto")
                         .HasColumnName("download_method");
+
+                    b.Property<string>("DownloadType")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int?>("Duration")
                         .HasColumnType("integer")
@@ -182,6 +395,9 @@ namespace VideoVault.Infrastructure.Migrations
                         .HasDefaultValue("pending")
                         .HasColumnName("status");
 
+                    b.Property<string>("SubtitlePath")
+                        .HasColumnType("text");
+
                     b.Property<string>("ThumbnailUrl")
                         .HasColumnType("text")
                         .HasColumnName("thumbnail_url");
@@ -222,6 +438,50 @@ namespace VideoVault.Infrastructure.Migrations
                     b.HasIndex("UserId", "Status");
 
                     b.ToTable("download_jobs", (string)null);
+                });
+
+            modelBuilder.Entity("VideoVault.Domain.Entities.FeatureVector", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("EntityId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("entity_type");
+
+                    b.Property<string>("VectorDataJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("vector_data_json");
+
+                    b.Property<string>("VectorModel")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("vector_model");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityType", "EntityId");
+
+                    b.ToTable("feature_vectors", (string)null);
                 });
 
             modelBuilder.Entity("VideoVault.Domain.Entities.Payment", b =>
@@ -305,6 +565,57 @@ namespace VideoVault.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("payments", (string)null);
+                });
+
+            modelBuilder.Entity("VideoVault.Domain.Entities.RetentionSimulation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("DetailedTimelineJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("detailed_timeline_json");
+
+                    b.Property<double>("Drop0To3s")
+                        .HasColumnType("double precision")
+                        .HasColumnName("drop_0_to_3s");
+
+                    b.Property<double>("Drop3To5s")
+                        .HasColumnType("double precision")
+                        .HasColumnName("drop_3_to_5s");
+
+                    b.Property<string>("ModelVersion")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("model_version");
+
+                    b.Property<double>("PredictedCompletionRate")
+                        .HasColumnType("double precision")
+                        .HasColumnName("predicted_completion_rate");
+
+                    b.Property<double>("ReplayProbability")
+                        .HasColumnType("double precision")
+                        .HasColumnName("replay_probability");
+
+                    b.Property<string>("VideoUrl")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("video_url");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("retention_simulations", (string)null);
                 });
 
             modelBuilder.Entity("VideoVault.Domain.Entities.SubscriptionPlan", b =>
@@ -411,7 +722,7 @@ namespace VideoVault.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("a0000000-0000-0000-0000-000000000001"),
-                            CreatedAt = new DateTime(2026, 5, 14, 8, 2, 23, 774, DateTimeKind.Utc).AddTicks(4510),
+                            CreatedAt = new DateTime(2026, 5, 21, 9, 46, 56, 106, DateTimeKind.Utc).AddTicks(9306),
                             Description = "Dùng thử miễn phí, giới hạn cơ bản",
                             DisplayName = "Free",
                             Features = "[\"basic_download\",\"720p_quality\"]",
@@ -424,12 +735,12 @@ namespace VideoVault.Infrastructure.Migrations
                             QuotaLimit = 5,
                             QuotaPeriod = "daily",
                             SortOrder = 0,
-                            UpdatedAt = new DateTime(2026, 5, 14, 8, 2, 23, 774, DateTimeKind.Utc).AddTicks(4513)
+                            UpdatedAt = new DateTime(2026, 5, 21, 9, 46, 56, 106, DateTimeKind.Utc).AddTicks(9309)
                         },
                         new
                         {
                             Id = new Guid("a0000000-0000-0000-0000-000000000002"),
-                            CreatedAt = new DateTime(2026, 5, 14, 8, 2, 23, 774, DateTimeKind.Utc).AddTicks(4537),
+                            CreatedAt = new DateTime(2026, 5, 21, 9, 46, 56, 106, DateTimeKind.Utc).AddTicks(9338),
                             Description = "Dành cho cá nhân, tải video chất lượng cao",
                             DisplayName = "Starter",
                             Features = "[\"basic_download\",\"1080p_quality\",\"no_watermark\",\"high_speed\"]",
@@ -442,12 +753,12 @@ namespace VideoVault.Infrastructure.Migrations
                             QuotaLimit = 30,
                             QuotaPeriod = "daily",
                             SortOrder = 1,
-                            UpdatedAt = new DateTime(2026, 5, 14, 8, 2, 23, 774, DateTimeKind.Utc).AddTicks(4537)
+                            UpdatedAt = new DateTime(2026, 5, 21, 9, 46, 56, 106, DateTimeKind.Utc).AddTicks(9338)
                         },
                         new
                         {
                             Id = new Guid("a0000000-0000-0000-0000-000000000003"),
-                            CreatedAt = new DateTime(2026, 5, 14, 8, 2, 23, 774, DateTimeKind.Utc).AddTicks(4546),
+                            CreatedAt = new DateTime(2026, 5, 21, 9, 46, 56, 106, DateTimeKind.Utc).AddTicks(9348),
                             Description = "Dành cho creator, full tính năng chuyên nghiệp",
                             DisplayName = "Pro",
                             Features = "[\"basic_download\",\"4k_quality\",\"no_watermark\",\"high_speed\",\"batch_download\",\"priority_support\"]",
@@ -460,12 +771,12 @@ namespace VideoVault.Infrastructure.Migrations
                             QuotaLimit = 100,
                             QuotaPeriod = "daily",
                             SortOrder = 2,
-                            UpdatedAt = new DateTime(2026, 5, 14, 8, 2, 23, 774, DateTimeKind.Utc).AddTicks(4546)
+                            UpdatedAt = new DateTime(2026, 5, 21, 9, 46, 56, 106, DateTimeKind.Utc).AddTicks(9349)
                         },
                         new
                         {
                             Id = new Guid("a0000000-0000-0000-0000-000000000004"),
-                            CreatedAt = new DateTime(2026, 5, 14, 8, 2, 23, 774, DateTimeKind.Utc).AddTicks(4549),
+                            CreatedAt = new DateTime(2026, 5, 21, 9, 46, 56, 106, DateTimeKind.Utc).AddTicks(9352),
                             Description = "Dành cho doanh nghiệp, API và quản lý team",
                             DisplayName = "Business",
                             Features = "[\"basic_download\",\"original_quality\",\"no_watermark\",\"high_speed\",\"batch_download\",\"priority_support\",\"api_access\",\"team_management\"]",
@@ -478,8 +789,63 @@ namespace VideoVault.Infrastructure.Migrations
                             QuotaLimit = 500,
                             QuotaPeriod = "daily",
                             SortOrder = 3,
-                            UpdatedAt = new DateTime(2026, 5, 14, 8, 2, 23, 774, DateTimeKind.Utc).AddTicks(4549)
+                            UpdatedAt = new DateTime(2026, 5, 21, 9, 46, 56, 106, DateTimeKind.Utc).AddTicks(9352)
                         });
+                });
+
+            modelBuilder.Entity("VideoVault.Domain.Entities.TrendCluster", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<int>("ClusterId")
+                        .HasColumnType("integer")
+                        .HasColumnName("cluster_id");
+
+                    b.Property<string>("ClusterName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("cluster_name");
+
+                    b.Property<DateTime>("DiscoveredAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("discovered_at")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<bool>("IsEmerging")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_emerging");
+
+                    b.Property<bool>("IsSaturated")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_saturated");
+
+                    b.Property<double>("MomentumScore")
+                        .HasColumnType("double precision")
+                        .HasColumnName("momentum_score");
+
+                    b.Property<string>("Niche")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("niche");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("trend_clusters", (string)null);
                 });
 
             modelBuilder.Entity("VideoVault.Domain.Entities.User", b =>

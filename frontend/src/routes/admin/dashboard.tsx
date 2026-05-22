@@ -3,9 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { analyticsApi } from '../../shared/api/analytics.api';
 import { formatFileSize } from '../../shared/utils/format';
 import { 
-    BarChart3, PieChart, TrendingUp, Users, Download, 
+    PieChart, TrendingUp, Users, Download, 
     ShieldCheck, DollarSign, Activity, Server, HardDrive,
-    Sparkles, ArrowUpRight, ArrowDownRight, Zap
+    Sparkles, ArrowUpRight, Zap
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 

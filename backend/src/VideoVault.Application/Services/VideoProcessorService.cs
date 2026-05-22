@@ -18,7 +18,7 @@ public class VideoProcessorService
         _serviceProvider = serviceProvider;
     }
 
-    public async Task ProcessJobAsync(Guid jobId, string maxQuality = "Original")
+    public async Task ProcessJobAsync(Guid jobId, string maxQuality = "Original", string downloadType = "auto")
     {
         using var scope = _serviceProvider.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -33,7 +33,7 @@ public class VideoProcessorService
             await db.SaveChangesAsync();
 
             // Run Python Script with quality constraint
-            var result = await RunPythonDownloader(job.OriginalUrl, jobId, maxQuality);
+            var result = await RunPythonDownloader(job.OriginalUrl, jobId, maxQuality, downloadType);
 
             if (result.Success)
             {
@@ -61,12 +61,12 @@ public class VideoProcessorService
     }
 
     private async Task<(bool Success, string Output, string Error)> RunPythonDownloader(
-        string url, Guid jobId, string maxQuality)
+        string url, Guid jobId, string maxQuality, string downloadType)
     {
         var startInfo = new ProcessStartInfo
         {
             FileName = _pythonPath,
-            Arguments = $"\"{_scriptPath}\" --url \"{url}\" --quality \"{maxQuality}\" --json",
+            Arguments = $"\"{_scriptPath}\" --url \"{url}\" --quality \"{maxQuality}\" --download-type \"{downloadType}\" --json",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,

@@ -17,6 +17,10 @@ Features:
 import sys
 import os
 
+if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+
+
 # Add services directory to path
 _SERVICES_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _SERVICES_DIR not in sys.path:

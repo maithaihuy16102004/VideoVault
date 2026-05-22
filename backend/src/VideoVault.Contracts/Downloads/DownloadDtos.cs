@@ -1,6 +1,6 @@
 namespace VideoVault.Contracts.Downloads;
 
-public record CreateDownloadRequest(string Url, string Quality = "auto");
+public record CreateDownloadRequest(string Url, string Quality = "auto", string DownloadType = "auto");
 
 public record DownloadJobDto(
     Guid Id,
@@ -15,8 +15,9 @@ public record DownloadJobDto(
     string? ErrorMessage,
     DateTime CreatedAt,
     DateTime? CompletedAt,
-    // New field for subtitle path (SRT)
-    string? SubtitlePath
+    string? SubtitlePath,
+    string? FileExtension,
+    string DownloadType = "auto"
 );
 
 // ── Scraping DTOs ──────────────────────────────────────
@@ -50,7 +51,7 @@ public record HashtagInfoDto(
     List<ScrapedVideoDto> Videos
 );
 
-public record BatchDownloadRequest(List<string> Urls, string Quality = "auto");
+public record BatchDownloadRequest(List<string> Urls, string Quality = "auto", string DownloadType = "auto");
 
 public record BatchDownloadResponse(
     List<DownloadJobDto> Jobs,

@@ -27,4 +27,26 @@ namespace VideoVault.Contracts.Automation
         public string SrtContent { get; set; } = string.Empty;
         public string Error { get; set; } = string.Empty;
     }
+
+    public class DubbingPipelineRequest
+    {
+        public string VideoPath { get; set; } = string.Empty;
+        public string TargetLanguage { get; set; } = "vi";
+        public string TtsEngine { get; set; } = "edge-tts";
+        public bool EnableVoiceClone { get; set; } = false;
+        public bool EnableEmotion { get; set; } = true;
+        public double SpeedMin { get; set; } = 0.92;
+        public double SpeedMax { get; set; } = 1.08;
+    }
+
+    public class DubbingPipelineStatus
+    {
+        public string JobId { get; set; } = string.Empty;
+        public string Status { get; set; } = "queued";
+        public double Progress { get; set; }
+        public string CurrentStage { get; set; } = string.Empty;
+        public string? OutputVideoPath { get; set; }
+        public string? SubtitlePath { get; set; }
+        public string? ErrorMessage { get; set; }
+    }
 }

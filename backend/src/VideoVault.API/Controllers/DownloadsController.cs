@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using VideoVault.Application.Services;
 using VideoVault.Contracts.Common;
 using VideoVault.Contracts.Downloads;
+using VideoVault.Domain.Entities;
 
 namespace VideoVault.API.Controllers;
 
@@ -165,6 +166,14 @@ public class DownloadsController : ControllerBase
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
+
+        // Feature gate: only Pro/Business/Admin can batch download
+        var user = await _downloadService.GetUserWithPlanAsync(userId.Value);
+        if (user == null) return Unauthorized();
+
+        // Admin bypasses feature check
+        if (user.Role != "admin" && !DownloadService.HasFeature(user.SubscriptionPlan, "batch_download"))
+            return StatusCode(403, new ApiResponse<string>(false, null, "Gói của bạn không hỗ trợ tải hàng loạt. Vui lòng nâng cấp lên Pro hoặc Business."));
 
         var jobs = new List<DownloadJobDto>();
         var failed = new List<string>();

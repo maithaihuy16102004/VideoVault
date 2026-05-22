@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useDownloadHistory, useCreateDownload, useCancelDownload, useDeleteDownload } from '../shared/hooks/useDownloads';
 import { truncateText, formatFileSize, timeAgo, saveFileAs } from '../shared/utils/format';
-import { Loader2, Download, CheckCircle2, Trash2, X, FolderDown, Clock, AlertCircle, Image as ImageIcon, Music, Settings2 } from 'lucide-react';
+import { Loader2, Download, CheckCircle2, Trash2, X, FolderDown, Clock, AlertCircle, Image as ImageIcon, Music, Settings2, Sparkles, Copy, Archive } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+import { useAuth } from '../shared/hooks/useAuth';
 
 const MAX_TITLE_CHARS = 45;
 
@@ -24,11 +26,18 @@ const statusConfig: Record<string, { label: string; color: string; bgColor: stri
 };
 
 const Downloads: React.FC = () => {
+    const { user } = useAuth();
     const [url, setUrl] = useState('');
     const [page, setPage] = useState(1);
     const pageSize = 10;
     const [autoRename, setAutoRename] = useState(true);
     const [extractAudio, setExtractAudio] = useState(false);
+    const [downloadType, setDownloadType] = useState('auto');
+
+    const [aiUrl, setAiUrl] = useState('');
+    const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+    const [aiResult, setAiResult] = useState<{ caption: string, hashtags: string[] } | null>(null);
+    const [aiError, setAiError] = useState('');
 
     const { data: downloads, isLoading, error } = useDownloadHistory(page, pageSize);
     const createMutation = useCreateDownload();
@@ -38,26 +47,79 @@ const Downloads: React.FC = () => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!url.trim()) return;
-        createMutation.mutate({ url });
+        createMutation.mutate({ url, downloadType });
         setUrl('');
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const handleSaveAs = async (fileUrl: string, title?: string) => {
-        const filename = (title || 'video') + '.mp4';
-        await saveFileAs(fileUrl, filename);
+    const handleGenerateAi = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!aiUrl.trim()) return;
+        setIsGeneratingAi(true);
+        setAiError('');
+        setAiResult(null);
+        try {
+            const token = document.cookie.split('; ').find(row => row.startsWith('access_token='))?.split('=')[1];
+            const res = await fetch('http://localhost:5141/api/v1/ai/generate-caption', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
+                body: JSON.stringify({ url: aiUrl })
+            });
+            const textResponse = await res.text();
+            let data: any = {};
+            try {
+                if (textResponse) data = JSON.parse(textResponse);
+            } catch (e) {
+                console.error("Non-JSON response:", textResponse);
+                throw new Error(`Server returned an invalid response (${res.status})`);
+            }
+            if (!res.ok) throw new Error(data?.error || `Failed to generate AI content (${res.status})`);
+            setAiResult(data);
+        } catch (err: any) {
+            setAiError(err.message);
+        } finally {
+            setIsGeneratingAi(false);
+        }
     };
 
     const activeCount = downloads?.filter(d => d.status === 'pending' || d.status === 'processing').length || 0;
+    
+    // Determine plan info from quota
+    let planBadge = { name: 'Free', color: 'bg-gray-500', quality: '720p' };
+    if (user?.role === 'admin') planBadge = { name: 'Admin', color: 'bg-purple-500', quality: 'Original' };
+    else if (user?.quotaTotal === 30) planBadge = { name: 'Starter', color: 'bg-blue-500', quality: '1080p' };
+    else if (user?.quotaTotal === 100) planBadge = { name: 'Pro', color: 'bg-fuchsia-500', quality: '4K' };
+    else if (user?.quotaTotal === 500) planBadge = { name: 'Business', color: 'bg-orange-500', quality: 'Original' };
+
+    const quotaLeft = user?.role === 'admin' ? '∞' : Math.max(0, (user?.quotaTotal || 5) - (user?.quotaUsed || 0));
 
     return (
         <div className="p-8 max-w-5xl mx-auto space-y-8">
             {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                    Downloads
-                </h1>
-                <p className="text-gray-500 mt-1">Quản lý và tải video từ các nền tảng.</p>
+            <div className="flex justify-between items-end">
+                <div>
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+                        Downloads
+                    </h1>
+                    <p className="text-gray-500 mt-1">Quản lý và tải video từ các nền tảng.</p>
+                </div>
+                {user && (
+                    <div className="text-right">
+                        <div className="flex items-center gap-2 justify-end mb-1">
+                            <span className={`px-2 py-0.5 rounded text-xs font-bold text-white ${planBadge.color}`}>
+                                {planBadge.name} Plan
+                            </span>
+                            <span className="text-xs text-gray-400 border border-white/10 px-2 py-0.5 rounded bg-white/5">
+                                Max: {planBadge.quality}
+                            </span>
+                        </div>
+                        <div className="text-sm text-gray-400">
+                            Lượt tải còn lại hôm nay: <strong className="text-white">{quotaLeft}</strong>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Download Form */}
@@ -108,12 +170,90 @@ const Downloads: React.FC = () => {
                         />
                         <Music size={14} /> Tách âm thanh (MP3)
                     </label>
+
+                    <div className="flex-1"></div>
+                    
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-400">Tải về:</span>
+                        <select 
+                            value={downloadType}
+                            onChange={(e) => setDownloadType(e.target.value)}
+                            className="bg-black/20 border border-white/10 rounded-lg px-3 py-1 text-sm text-gray-300 focus:outline-none focus:border-primary/50"
+                        >
+                            <option value="auto">Tự động (Ưu tiên Video)</option>
+                            <option value="video">Chỉ Video</option>
+                            <option value="images">Chỉ Hình Ảnh</option>
+                            <option value="both">Cả Video & Ảnh (ZIP)</option>
+                        </select>
+                    </div>
                 </div>
 
                 {createMutation.isError && (
                     <p className="text-red-400 mt-3 text-sm flex items-center gap-2">
                         <AlertCircle size={14} /> {(createMutation.error as Error).message}
                     </p>
+                )}
+            </form>
+
+            {/* AI Generation Tool */}
+            <form onSubmit={handleGenerateAi} className="glass-card p-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 bg-gradient-to-bl from-purple-500/20 to-transparent rounded-bl-full pointer-events-none opacity-50"></div>
+                <div className="flex items-center gap-3 mb-4 text-purple-400">
+                    <Sparkles size={20} />
+                    <h3 className="font-bold text-white">AI Content Generator (Gemini)</h3>
+                    <span className="ml-auto px-2 py-0.5 bg-purple-500/10 text-[11px] font-bold rounded-full border border-purple-500/20">
+                        Viral Caption & Hashtags
+                    </span>
+                </div>
+                <div className="relative">
+                    <input
+                        type="text"
+                        value={aiUrl}
+                        onChange={(e) => setAiUrl(e.target.value)}
+                        placeholder="Dán URL video để AI phân tích tạo Caption..."
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 pr-40 focus:outline-none focus:border-purple-500/50 focus:bg-white/8 transition-all"
+                    />
+                    <button
+                        type="submit"
+                        disabled={!aiUrl.trim() || isGeneratingAi}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 px-6 py-2.5 bg-purple-500 text-white rounded-lg font-semibold hover:bg-purple-600 transition-all active:scale-95 disabled:opacity-40 flex items-center gap-2"
+                    >
+                        {isGeneratingAi ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={16} />} 
+                        Phân Tích
+                    </button>
+                </div>
+                {aiError && (
+                    <p className="text-red-400 mt-3 text-sm flex items-center gap-2">
+                        <AlertCircle size={14} /> {aiError}
+                    </p>
+                )}
+                {aiResult && (
+                    <div className="mt-4 p-4 rounded-xl bg-purple-500/5 border border-purple-500/10 space-y-4">
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-sm font-semibold text-purple-300">Viral Caption</h4>
+                                <button onClick={() => navigator.clipboard.writeText(aiResult.caption)} className="text-gray-400 hover:text-white transition-colors" title="Copy">
+                                    <Copy size={14} />
+                                </button>
+                            </div>
+                            <p className="text-sm text-gray-200 whitespace-pre-wrap">{aiResult.caption}</p>
+                        </div>
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-sm font-semibold text-purple-300">Top 5 Niche Hashtags</h4>
+                                <button onClick={() => navigator.clipboard.writeText(aiResult.hashtags.join(' '))} className="text-gray-400 hover:text-white transition-colors" title="Copy">
+                                    <Copy size={14} />
+                                </button>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {aiResult.hashtags.map((tag, i) => (
+                                    <span key={i} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-xs font-medium text-gray-300 hover:border-purple-500/30 transition-colors">
+                                        {tag.startsWith('#') ? tag : `#${tag}`}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                 )}
             </form>
 
@@ -199,14 +339,25 @@ const Downloads: React.FC = () => {
                                                     >
                                                         <Music size={16} /> Audio
                                                     </button>
-                                                    <button 
-                                                        onClick={() => item.fileUrl && saveFileAs(`http://localhost:5141${item.fileUrl}`, (item.title || 'video') + '.mp4')}
-                                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-lg shadow-lg shadow-green-500/20 transition-all active:scale-95"
-                                                        title="Lưu Video về máy"
-                                                    >
-                                                        <FolderDown size={16} />
-                                                        Video
-                                                    </button>
+                                                    {item.fileExtension === '.zip' ? (
+                                                        <button 
+                                                            onClick={() => item.fileUrl && saveFileAs(`http://localhost:5141${item.fileUrl}`, (item.title || 'images') + '.zip')}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold rounded-lg shadow-lg shadow-blue-500/20 transition-all active:scale-95"
+                                                            title="Lưu Ảnh (Zip) về máy"
+                                                        >
+                                                            <Archive size={16} />
+                                                            Images
+                                                        </button>
+                                                    ) : (
+                                                        <button 
+                                                            onClick={() => item.fileUrl && saveFileAs(`http://localhost:5141${item.fileUrl}`, (item.title || 'video') + (item.fileExtension || '.mp4'))}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-lg shadow-lg shadow-green-500/20 transition-all active:scale-95"
+                                                            title="Lưu Video về máy"
+                                                        >
+                                                            <FolderDown size={16} />
+                                                            Video
+                                                        </button>
+                                                    )}
                                                 </>
                                             ) : isActive ? (
                                                 <div className="flex items-center gap-1">

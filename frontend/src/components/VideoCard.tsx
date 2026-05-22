@@ -1,5 +1,5 @@
 import React from 'react';
-import { VideoDto } from '@/shared/types/download';
+import type { VideoDto } from '@/shared/types/download';
 import { Button } from '@/components/ui/button';
 
 interface Props {

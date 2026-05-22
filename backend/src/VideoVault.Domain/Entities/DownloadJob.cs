@@ -23,6 +23,7 @@ public class DownloadJob
     public string? FilePath { get; set; }
     // New property to store extracted subtitle (SRT) file path
     public string? SubtitlePath { get; set; }
+    public string DownloadType { get; set; } = "auto";
 
     // Status & Progress — progress is SMALLINT in DB
     public string Status { get; set; } = "pending";

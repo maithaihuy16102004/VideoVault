@@ -13,6 +13,14 @@ public class AppDbContext : DbContext
     public DbSet<DownloadJob> DownloadJobs => Set<DownloadJob>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    
+    // ========== AI MLOps ==========
+    public DbSet<AiAnalysisLog> AiAnalysisLogs => Set<AiAnalysisLog>();
+    public DbSet<FeatureVector> FeatureVectors => Set<FeatureVector>();
+    public DbSet<RetentionSimulation> RetentionSimulations => Set<RetentionSimulation>();
+    public DbSet<CampaignRoi> CampaignRois => Set<CampaignRoi>();
+    public DbSet<CreatorDna> CreatorDnas => Set<CreatorDna>();
+    public DbSet<TrendCluster> TrendClusters => Set<TrendCluster>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -195,6 +203,106 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.CreatedAt).IsDescending();
 
             entity.HasOne(e => e.User).WithMany(u => u.AuditLogs).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ========== AI MLOps ==========
+        modelBuilder.Entity<AiAnalysisLog>(entity =>
+        {
+            entity.ToTable("ai_analysis_logs");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(e => e.VideoUrl).HasColumnName("video_url").HasMaxLength(2000);
+            entity.Property(e => e.Platform).HasColumnName("platform").HasMaxLength(50);
+            entity.Property(e => e.RankingModelVersion).HasColumnName("ranking_model_version").HasMaxLength(100);
+            entity.Property(e => e.LlmVersion).HasColumnName("llm_version").HasMaxLength(100);
+            entity.Property(e => e.PredictedViralScore).HasColumnName("predicted_viral_score");
+            entity.Property(e => e.PredictedWatchTime).HasColumnName("predicted_watch_time");
+            entity.Property(e => e.RecommendationLevel).HasColumnName("recommendation_level").HasMaxLength(50);
+            entity.Property(e => e.RawLlmPrompt).HasColumnName("raw_llm_prompt");
+            entity.Property(e => e.RawLlmResponse).HasColumnName("raw_llm_response");
+            entity.Property(e => e.ExtractedFeaturesJson).HasColumnName("extracted_features_json").HasColumnType("jsonb");
+            entity.Property(e => e.ConfidenceScore).HasColumnName("confidence_score");
+            entity.Property(e => e.UsedMetricRecovery).HasColumnName("used_metric_recovery").HasDefaultValue(false);
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+        });
+
+        modelBuilder.Entity<FeatureVector>(entity =>
+        {
+            entity.ToTable("feature_vectors");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(e => e.EntityType).HasColumnName("entity_type").HasMaxLength(50);
+            entity.Property(e => e.EntityId).HasColumnName("entity_id").HasMaxLength(100);
+            entity.Property(e => e.VectorModel).HasColumnName("vector_model").HasMaxLength(100);
+            entity.Property(e => e.VectorDataJson).HasColumnName("vector_data_json").HasColumnType("jsonb");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+
+            entity.HasIndex(e => new { e.EntityType, e.EntityId });
+        });
+
+        modelBuilder.Entity<RetentionSimulation>(entity =>
+        {
+            entity.ToTable("retention_simulations");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(e => e.VideoUrl).HasColumnName("video_url").HasMaxLength(2000);
+            entity.Property(e => e.Drop0To3s).HasColumnName("drop_0_to_3s");
+            entity.Property(e => e.Drop3To5s).HasColumnName("drop_3_to_5s");
+            entity.Property(e => e.PredictedCompletionRate).HasColumnName("predicted_completion_rate");
+            entity.Property(e => e.ReplayProbability).HasColumnName("replay_probability");
+            entity.Property(e => e.DetailedTimelineJson).HasColumnName("detailed_timeline_json").HasColumnType("jsonb");
+            entity.Property(e => e.ModelVersion).HasColumnName("model_version").HasMaxLength(100);
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+        });
+
+        modelBuilder.Entity<CampaignRoi>(entity =>
+        {
+            entity.ToTable("campaign_rois");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(e => e.VideoId).HasColumnName("video_id").HasMaxLength(100);
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.PredictedCpm).HasColumnName("predicted_cpm").HasColumnType("decimal(18,2)");
+            entity.Property(e => e.PredictedFollowers).HasColumnName("predicted_followers");
+            entity.Property(e => e.PredictedRoiRatio).HasColumnName("predicted_roi_ratio").HasColumnType("decimal(18,2)");
+            entity.Property(e => e.ActualSpend).HasColumnName("actual_spend").HasColumnType("decimal(18,2)");
+            entity.Property(e => e.ActualFollowersGained).HasColumnName("actual_followers_gained");
+            entity.Property(e => e.ActualRoiRatio).HasColumnName("actual_roi_ratio").HasColumnType("decimal(18,2)");
+            entity.Property(e => e.IsUsedForTraining).HasColumnName("is_used_for_training").HasDefaultValue(false);
+            entity.Property(e => e.FeedbackNotes).HasColumnName("feedback_notes");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("NOW()");
+            entity.Property(e => e.AnalyzedAt).HasColumnName("analyzed_at");
+        });
+
+        modelBuilder.Entity<CreatorDna>(entity =>
+        {
+            entity.ToTable("creator_dnas");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(e => e.ChannelUrl).HasColumnName("channel_url").HasMaxLength(2000);
+            entity.Property(e => e.Username).HasColumnName("username").HasMaxLength(255);
+            entity.Property(e => e.PrimaryStyle).HasColumnName("primary_style").HasMaxLength(100);
+            entity.Property(e => e.AveragePacing).HasColumnName("average_pacing").HasMaxLength(100);
+            entity.Property(e => e.HookPattern).HasColumnName("hook_pattern").HasMaxLength(100);
+            entity.Property(e => e.TotalVideosAnalyzed).HasColumnName("total_videos_analyzed").HasDefaultValue(0);
+            entity.Property(e => e.AverageRetention).HasColumnName("average_retention");
+            entity.Property(e => e.VectorDataJson).HasColumnName("vector_data_json").HasColumnType("jsonb");
+            entity.Property(e => e.LastUpdated).HasColumnName("last_updated").HasDefaultValueSql("NOW()");
+        });
+
+        modelBuilder.Entity<TrendCluster>(entity =>
+        {
+            entity.ToTable("trend_clusters");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id").HasDefaultValueSql("gen_random_uuid()");
+            entity.Property(e => e.ClusterName).HasColumnName("cluster_name").HasMaxLength(255);
+            entity.Property(e => e.ClusterId).HasColumnName("cluster_id");
+            entity.Property(e => e.Niche).HasColumnName("niche").HasMaxLength(100);
+            entity.Property(e => e.MomentumScore).HasColumnName("momentum_score");
+            entity.Property(e => e.IsEmerging).HasColumnName("is_emerging").HasDefaultValue(false);
+            entity.Property(e => e.IsSaturated).HasColumnName("is_saturated").HasDefaultValue(false);
+            entity.Property(e => e.DiscoveredAt).HasColumnName("discovered_at").HasDefaultValueSql("NOW()");
+            entity.Property(e => e.ExpiresAt).HasColumnName("expires_at");
         });
     }
 

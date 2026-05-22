@@ -1,15 +1,101 @@
-import React, { useState } from 'react';
-import { FileAudio, Upload, Sparkles, Languages, Clock, Edit3, Save, Download } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { FileAudio, Upload, Sparkles, Languages, Clock, Edit3, Save, Download, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { extractSubtitles, getSubtitleStatus } from '@/shared/api/dubbing.api';
+
+interface Subtitle {
+    id: number;
+    start: string;
+    end: string;
+    text: string;
+}
 
 const SpeechToText: React.FC = () => {
     const [isProcessing, setIsProcessing] = useState(false);
+    const [jobId, setJobId] = useState<string | null>(null);
+    const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
+    const [rawSrt, setRawSrt] = useState("");
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    const mockSubtitles = [
-        { id: 1, start: '00:01', end: '00:03', text: 'Chào mọi người, hôm nay mình sẽ review' },
-        { id: 2, start: '00:03', end: '00:06', text: 'một sản phẩm đang cực kỳ hot trên Douyin.' },
-        { id: 3, start: '00:06', end: '00:08', text: 'Đó chính là máy hút bụi cầm tay Mini.' },
-    ];
+    const parseSrt = (srtContent: string) => {
+        const lines = srtContent.trim().split('\n');
+        const parsed: Subtitle[] = [];
+        let i = 0;
+        while (i < lines.length) {
+            if (lines[i].trim() === '') {
+                i++;
+                continue;
+            }
+            const id = parseInt(lines[i]);
+            i++;
+            if (i >= lines.length) break;
+            const timeStr = lines[i];
+            const [start, end] = timeStr.split(' --> ').map(s => s.trim().substring(0, 8));
+            i++;
+            let text = '';
+            while (i < lines.length && lines[i].trim() !== '') {
+                text += lines[i] + ' ';
+                i++;
+            }
+            parsed.push({ id, start, end, text: text.trim() });
+        }
+        setSubtitles(parsed);
+    };
+
+    useEffect(() => {
+        if (jobId && isProcessing) {
+            pollingIntervalRef.current = setInterval(async () => {
+                try {
+                    const res = await getSubtitleStatus(jobId);
+                    if (res.status === 'completed' && res.srt_content) {
+                        setRawSrt(res.srt_content);
+                        parseSrt(res.srt_content);
+                        setIsProcessing(false);
+                        if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+                    } else if (res.status === 'failed') {
+                        setIsProcessing(false);
+                        alert("Lỗi trích xuất STT: " + res.error);
+                        if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+                    }
+                } catch (error) {
+                    console.error("Polling error", error);
+                }
+            }, 2000);
+        }
+        return () => {
+            if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+        };
+    }, [jobId, isProcessing]);
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const file = e.target.files[0];
+            setIsProcessing(true);
+            setSubtitles([]);
+            try {
+                const res = await extractSubtitles(file);
+                setJobId(res.jobId);
+            } catch (error) {
+                console.error("Upload error", error);
+                setIsProcessing(false);
+                alert("Lỗi kết nối tới STT Service.");
+            }
+        }
+    };
+    
+    const handleDownloadSrt = () => {
+        if (!rawSrt) return;
+        const blob = new Blob([rawSrt], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'subtitles.srt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
 
     return (
         <div className="p-8 max-w-6xl mx-auto">
@@ -23,19 +109,23 @@ const SpeechToText: React.FC = () => {
                 </div>
             </div>
 
-            {!isProcessing ? (
-                <div className="glass-card p-16 border-dashed border-2 border-white/5 hover:border-primary/20 transition-all flex flex-col items-center justify-center text-center group cursor-pointer">
+            {!jobId ? (
+                <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="glass-card p-16 border-dashed border-2 border-white/5 hover:border-primary/20 transition-all flex flex-col items-center justify-center text-center group cursor-pointer"
+                >
+                    <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileChange} accept="video/*,audio/*" />
                     <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                        <Upload className="text-primary" size={32} />
+                        {isProcessing ? <Loader2 className="text-primary animate-spin" size={32} /> : <Upload className="text-primary" size={32} />}
                     </div>
-                    <h2 className="text-xl font-bold mb-2">Tải video hoặc audio lên</h2>
+                    <h2 className="text-xl font-bold mb-2">{isProcessing ? "Đang upload..." : "Tải video hoặc audio lên"}</h2>
                     <p className="text-gray-500 max-w-sm mb-8">Hỗ trợ MP4, MOV, MP3, WAV. Dung lượng tối đa 500MB.</p>
-                    <button 
-                        onClick={() => setIsProcessing(true)}
-                        className="bg-primary hover:bg-primary-dark px-12 py-4 rounded-2xl font-bold transition-all active:scale-95 shadow-lg shadow-primary/20"
-                    >
-                        Bắt đầu xử lý AI
-                    </button>
+                </div>
+            ) : isProcessing ? (
+                <div className="glass-card p-16 flex flex-col items-center justify-center text-center">
+                    <Loader2 className="text-primary animate-spin mb-4" size={48} />
+                    <h2 className="text-xl font-bold mb-2">AI Đang trích xuất phụ đề...</h2>
+                    <p className="text-gray-500">Quá trình này có thể mất vài phút tùy thuộc vào độ dài video.</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -79,12 +169,14 @@ const SpeechToText: React.FC = () => {
                                 </h3>
                                 <div className="flex gap-2">
                                     <button className="p-2 hover:bg-white/5 rounded-lg text-gray-500 hover:text-white transition-all"><Save size={18} /></button>
-                                    <button className="p-2 hover:bg-white/5 rounded-lg text-gray-500 hover:text-white transition-all"><Download size={18} /></button>
+                                    <button onClick={handleDownloadSrt} className="p-2 hover:bg-white/5 rounded-lg text-gray-500 hover:text-white transition-all"><Download size={18} /></button>
                                 </div>
                             </div>
                             
                             <div className="divide-y divide-white/5 max-h-[500px] overflow-y-auto no-scrollbar">
-                                {mockSubtitles.map((sub) => (
+                                {subtitles.length === 0 ? (
+                                    <div className="p-6 text-center text-gray-500">Không tìm thấy phụ đề.</div>
+                                ) : subtitles.map((sub) => (
                                     <div key={sub.id} className="p-6 flex gap-6 hover:bg-white/[0.02] transition-all group">
                                         <div className="text-[10px] font-bold text-gray-600 space-y-1 pt-1">
                                             <p className="hover:text-primary cursor-pointer">{sub.start}</p>
@@ -104,7 +196,7 @@ const SpeechToText: React.FC = () => {
 
                         <div className="flex justify-end gap-4">
                             <button className="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 font-bold transition-all">Lưu nháp</button>
-                            <button className="px-10 py-3 rounded-xl bg-primary hover:bg-primary-dark font-bold shadow-lg shadow-primary/20 transition-all active:scale-[0.98]">Xuất SRT</button>
+                            <button onClick={handleDownloadSrt} className="px-10 py-3 rounded-xl bg-primary hover:bg-primary-dark font-bold shadow-lg shadow-primary/20 transition-all active:scale-[0.98]">Xuất SRT</button>
                         </div>
                     </div>
                 </div>

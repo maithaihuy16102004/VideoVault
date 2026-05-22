@@ -1,0 +1,39 @@
+# FastAPI
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.6
+websockets>=12.0
+httpx>=0.27.0
+pydantic>=2.5.0
+pydantic-settings>=2.2.1
+
+# Audio Processing
+soundfile>=0.12.0
+librosa>=0.10.0
+pyloudnorm>=0.1.1
+numpy>=1.26.0
+scipy>=1.12.0
+
+# ML / AI
+torch>=2.1.0
+torchaudio>=2.1.0
+
+# STT
+faster-whisper>=1.0.0
+
+# TTS
+edge-tts>=6.1.9
+
+# Vocal Separation
+demucs>=4.0.0
+
+# Speaker Diarization
+pyannote.audio>=3.1.0
+
+# Translation
+google-generativeai>=0.5.0
+
+# Utilities
+aiofiles>=23.2.1
+imageio-ffmpeg>=0.4.9
+Pillow>=10.0.0

@@ -59,6 +59,7 @@ public class DownloadService
             Platform = platform,
             Quality = maxQuality,  // Gán quality theo plan
             Status = "pending",
+            DownloadType = request.DownloadType,
         };
 
         _db.DownloadJobs.Add(job);
@@ -70,8 +71,8 @@ public class DownloadService
 
         await _db.SaveChangesAsync();
 
-        // Trigger processing in background, truyền maxQuality
-        _ = Task.Run(() => _processor.ProcessJobAsync(job.Id, maxQuality));
+        // Trigger processing in background, truyền maxQuality và downloadType
+        _ = Task.Run(() => _processor.ProcessJobAsync(job.Id, maxQuality, request.DownloadType));
 
         return MapToDto(job);
     }
@@ -141,7 +142,26 @@ public class DownloadService
         job.Quality, job.Status, job.Progress,
         job.FileSize, job.FileUrl, job.ErrorMessage,
         job.CreatedAt, job.CompletedAt,
-        // Include subtitle path if available
-        job.SubtitlePath
+        job.SubtitlePath,
+        string.IsNullOrEmpty(job.FilePath) ? null : System.IO.Path.GetExtension(job.FilePath).ToLower(),
+        job.DownloadType
     );
+
+    public async Task<User?> GetUserWithPlanAsync(Guid userId)
+    {
+        return await _db.Users
+            .Include(u => u.SubscriptionPlan)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+    }
+
+    public static bool HasFeature(SubscriptionPlan? plan, string feature)
+    {
+        if (plan == null) return false;
+        try
+        {
+            var features = System.Text.Json.JsonSerializer.Deserialize<List<string>>(plan.Features);
+            return features?.Contains(feature) == true;
+        }
+        catch { return false; }
+    }
 }

@@ -1,16 +1,69 @@
 import React, { useState } from 'react';
-import { Mic2, Play, Volume2, Download, Wand2} from 'lucide-react';
-
+import { Mic2, Play, Volume2, Download, Wand2, Loader2} from 'lucide-react';
+import { generateVoiceTTS } from '@/shared/api/dubbing.api';
 
 const VoiceAI: React.FC = () => {
-    const [selectedVoice, setSelectedVoice] = useState('v1');
+    const [selectedVoice, setSelectedVoice] = useState('vi-VN-HoaiMyNeural');
+    const [text, setText] = useState("Chào mừng các bạn đã quay trở lại với VideoVault. Hôm nay mình sẽ giới thiệu cho các bạn một công cụ AI cực kỳ mạnh mẽ giúp Việt hóa video TikTok chỉ trong vài giây.");
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [audioUrl, setAudioUrl] = useState<string | null>(null);
+    const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
     const voices = [
-        { id: 'v1', name: 'Thanh Tùng', style: 'TikTok Viral', gender: 'Nam', tags: ['Năng động', 'Trẻ trung'] },
-        { id: 'v2', name: 'Minh Thư', style: 'Emotional', gender: 'Nữ', tags: ['Nhẹ nhàng', 'Sâu lắng'] },
-        { id: 'v3', name: 'Hoàng Nam', style: 'Professional', gender: 'Nam', tags: ['Tin tức', 'Trang trọng'] },
-        { id: 'v4', name: 'Linh Chi', style: 'Sales', gender: 'Nữ', tags: ['Cuốn hút', 'Mạnh mẽ'] },
+        { id: 'vi-VN-HoaiMyNeural', name: 'Hoài My', style: 'TikTok Viral', gender: 'Nữ', tags: ['Năng động', 'Trẻ trung'] },
+        { id: 'vi-VN-NamMinhNeural', name: 'Nam Minh', style: 'Professional', gender: 'Nam', tags: ['Tin tuc', 'Trang trong'] },
     ];
+
+    const handleGenerate = async () => {
+        if (!text.trim()) return;
+        setIsGenerating(true);
+        try {
+            const blob = await generateVoiceTTS({
+                text: text,
+                voiceId: selectedVoice,
+                speed: 1.0
+            });
+            const url = URL.createObjectURL(blob);
+            setAudioUrl(url);
+            
+            // Auto play
+            const audio = new Audio(url);
+            setAudioElement(audio);
+            audio.play();
+        } catch (error) {
+            console.error("Lỗi tạo giọng nói:", error);
+            alert("Lỗi tạo giọng nói. Kiểm tra kết nối tới Voice Service (port 5052).");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handlePlayPause = () => {
+        if (audioElement) {
+            if (audioElement.paused) {
+                audioElement.play();
+            } else {
+                audioElement.pause();
+            }
+        } else if (audioUrl) {
+            const audio = new Audio(audioUrl);
+            setAudioElement(audio);
+            audio.play();
+        } else {
+            handleGenerate();
+        }
+    };
+
+    const handleDownload = () => {
+        if (!audioUrl) return;
+        const a = document.createElement('a');
+        a.href = audioUrl;
+        a.download = `voice_ai_${Date.now()}.mp3`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    };
+
 
     return (
         <div className="p-8 max-w-6xl mx-auto">
@@ -82,7 +135,8 @@ const VoiceAI: React.FC = () => {
                         <textarea 
                             className="flex-1 w-full min-h-[300px] bg-transparent border-none outline-none resize-none text-xl leading-relaxed text-white/90"
                             placeholder="Nhập nội dung bạn muốn lồng tiếng..."
-                            defaultValue="Chào mừng các bạn đã quay trở lại với VideoVault. Hôm nay mình sẽ giới thiệu cho các bạn một công cụ AI cực kỳ mạnh mẽ giúp Việt hóa video TikTok chỉ trong vài giây."
+                            value={text}
+                            onChange={(e) => setText(e.target.value)}
                         />
 
                         <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-between">
@@ -98,11 +152,16 @@ const VoiceAI: React.FC = () => {
                             </div>
 
                             <div className="flex gap-4">
-                                <button className="p-4 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all">
-                                    <Play size={20} fill="currentColor" />
+                                <button onClick={handlePlayPause} className="p-4 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all">
+                                    {isGenerating ? <Loader2 size={20} className="animate-spin" /> : <Play size={20} fill="currentColor" />}
                                 </button>
-                                <button className="bg-primary hover:bg-primary-dark px-8 py-3 rounded-xl font-bold flex items-center gap-3 shadow-lg shadow-primary/20 transition-all active:scale-[0.98]">
-                                    <Download size={18} /> Xuất file Audio
+                                <button 
+                                    onClick={audioUrl ? handleDownload : handleGenerate}
+                                    disabled={isGenerating}
+                                    className="bg-primary hover:bg-primary-dark px-8 py-3 rounded-xl font-bold flex items-center gap-3 shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                                >
+                                    {isGenerating ? <Loader2 size={18} className="animate-spin" /> : audioUrl ? <Download size={18} /> : <Mic2 size={18} />} 
+                                    {audioUrl ? 'Xuất file Audio' : 'Tạo giọng nói AI'}
                                 </button>
                             </div>
                         </div>

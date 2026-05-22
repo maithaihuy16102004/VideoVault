@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../shared/hooks/useAuth';
 import { useCreateDownload, useDownloadHistory, useCancelDownload } from '../shared/hooks/useDownloads';
-import { truncateText, formatFileSize, timeAgo } from '../shared/utils/format';
+import { formatFileSize, timeAgo } from '../shared/utils/format';
 import { 
-    Video, ArrowRight, CheckCircle2, PieChart, ChevronRight,
-    Loader2, History, Clock, FolderDown, X, Play,
-    Sparkles, Zap, ShieldCheck, Crown, Activity, DownloadCloud
+    Video, CheckCircle2, PieChart, ChevronRight,
+    Loader2, History, Clock, FolderDown, X,
+    Sparkles, Zap, ShieldCheck, Crown, Activity, DownloadCloud, Megaphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { saveFileAs } from '../shared/utils/format';
 import { Link } from '@tanstack/react-router';
-
-const MAX_TITLE_CHARS = 45;
 
 const platformEmoji: Record<string, string> = {
     douyin: '🎵', tiktok: '📱', xhs: '📕', bilibili: '📺', youtube: '▶️', other: '🌐',

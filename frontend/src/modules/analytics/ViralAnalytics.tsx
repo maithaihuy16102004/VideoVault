@@ -1,96 +1,101 @@
-import React from 'react';
-import { LineChart, Zap, TrendingUp, BarChart3, ArrowUpRight} from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useMemo, useState } from 'react';
+import { Sparkles, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
+import { useStore } from '@/store/useStore';
 
 export const ViralAnalytics: React.FC = () => {
+    const analyzedChannel = useStore((state) => state.analyzedChannel);
+    const firstVideo = analyzedChannel?.videos?.[0];
+    const ai = firstVideo?.aiStrategy || {};
+    const [expanded, setExpanded] = useState(false);
+
+    const views = Number(firstVideo?.views || 0);
+    const completion = Number(firstVideo?.completionRate || 0);
+    const retention3s = Number(ai?.retention_prediction?.retention_at_3s || 0);
+    const scrollStop = Number(ai?.hook_analysis?.hook_strength || 0) * 10;
+    const velocity = Number(ai?.temporal_analytics?.acceleration_score || 60);
+    const attention = Math.round((retention3s * 0.5) + (scrollStop * 0.3) + (velocity * 0.2));
+    const confidence = Number(ai?.analysis_confidence?.overall_confidence || 72);
+    const confidencePenalty = views < 50 ? 40 : views < 200 ? 60 : 100;
+    const maxScore = confidencePenalty;
+    const aiScore = Math.min(Number(ai?.score || firstVideo?.aiScore || 0), maxScore);
+
+    const predictedRange = useMemo(() => {
+        const base = Number(firstVideo?.targetViews || Math.max(views * 2, 200));
+        return {
+            low: Math.round(base * 0.75),
+            high: Math.round(base * 1.75),
+        };
+    }, [firstVideo?.targetViews, views]);
+
     return (
-        <div className="p-8 max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-12">
-                <div>
-                    <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-                        <TrendingUp className="text-primary" size={32} />
-                        Viral Analytics
-                    </h1>
-                    <p className="text-gray-500">Phân tích xu hướng và dự đoán mức độ viral của nội dung.</p>
-                </div>
-                <div className="flex gap-4">
-                    <button className="bg-white/5 hover:bg-white/10 px-6 py-2.5 rounded-xl font-bold text-sm transition-all border border-white/5">
-                        Xuất báo cáo
-                    </button>
-                </div>
+        <div className="p-6 max-w-6xl mx-auto space-y-5">
+            <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold">AI Growth Console</h1>
+                <button onClick={() => setExpanded(!expanded)} className="text-xs px-3 py-2 rounded-lg bg-white/10">
+                    {expanded ? <span className="flex items-center gap-1"><ChevronUp size={14} /> Compact</span> : <span className="flex items-center gap-1"><ChevronDown size={14} /> Expand</span>}
+                </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                {[
-                    { label: 'Retention Score', value: '82/100', trend: '+12%', icon: Zap, color: 'text-yellow-400' },
-                    { label: 'Viral Probability', value: 'High', trend: '94%', icon: TrendingUp, color: 'text-green-400' },
-                    { label: 'Engagement Rate', value: '18.4%', trend: '+5.2%', icon: Activity, color: 'text-primary' },
-                    { label: 'Market Reach', value: '2.4M', trend: '+120K', icon: BarChart3, color: 'text-purple-400' },
-                ].map((stat, i) => (stat.icon = stat.icon || LineChart) && (
-                    <div key={i} className="glass-card p-6 border-white/5">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className={`p-2 rounded-lg bg-white/5 ${stat.color}`}>
-                                <stat.icon size={20} />
-                            </div>
-                            <span className="text-[10px] font-bold text-green-400 flex items-center gap-1">
-                                {stat.trend} <ArrowUpRight size={10} />
-                            </span>
-                        </div>
-                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-1">{stat.label}</p>
-                        <h3 className="text-2xl font-bold">{stat.value}</h3>
+            <div className="glass-card p-5 border border-white/10">
+                <div className="flex items-start justify-between mb-4">
+                    <div>
+                        <p className="text-xs text-gray-400">Promote Readiness</p>
+                        <h2 className="font-semibold">{firstVideo?.title || 'No analyzed video yet'}</h2>
                     </div>
-                ))}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 glass-card p-8">
-                    <h3 className="font-bold mb-6 flex items-center gap-2">
-                        <LineChart className="text-primary" size={18} />
-                        Dự báo tăng trưởng
-                    </h3>
-                    <div className="aspect-[21/9] bg-white/5 rounded-2xl flex items-center justify-center relative overflow-hidden">
-                        <div className="absolute inset-0 flex items-center justify-center opacity-10">
-                            <BarChart3 size={120} />
-                        </div>
-                        <p className="text-xs text-gray-500 font-medium">Chart visualization will be rendered here.</p>
-                        
-                        {/* Mock Line Chart */}
-                        <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
-                            <motion.path 
-                                d="M0 150 Q 100 120, 200 140 T 400 100 T 600 60 T 800 20"
-                                fill="none"
-                                stroke="var(--primary)"
-                                strokeWidth="4"
-                                initial={{ pathLength: 0 }}
-                                animate={{ pathLength: 1 }}
-                                transition={{ duration: 2, ease: "easeInOut" }}
-                            />
-                        </svg>
+                    <div className="text-right">
+                        <p className="text-xs text-gray-400">AI Score (capped by confidence)</p>
+                        <p className="text-2xl font-bold text-cyan-300">{aiScore}/{maxScore}</p>
                     </div>
                 </div>
 
-                <div className="glass-card p-8">
-                    <h3 className="font-bold mb-6">Trending Hooks</h3>
-                    <div className="space-y-4">
-                        {[
-                            "Đây là món đồ mình tiếc vì không mua sớm hơn...",
-                            "Dừng lại 3s nếu bạn đang gặp vấn đề về...",
-                            "Bí mật mà các shop Trung Quốc không muốn bạn biết",
-                            "Sản phẩm này đã cứu rỗi cuộc đời mình như thế nào"
-                        ].map((hook, i) => (
-                            <div key={i} className="p-4 rounded-xl bg-white/5 border border-transparent hover:border-primary/20 cursor-pointer transition-all group">
-                                <p className="text-sm font-medium group-hover:text-primary transition-colors line-clamp-2">"{hook}"</p>
-                                <div className="flex items-center justify-between mt-3">
-                                    <span className="text-[10px] text-gray-600 uppercase font-bold">Copy Hook</span>
-                                    <span className="text-[10px] text-green-500 font-bold uppercase">Hot 🔥</span>
-                                </div>
-                            </div>
-                        ))}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                    <div className="rounded-xl bg-white/5 p-3"><p className="text-gray-400 text-xs">Attention</p><p className="font-bold text-green-400">{attention}%</p></div>
+                    <div className="rounded-xl bg-white/5 p-3"><p className="text-gray-400 text-xs">Avg Watch</p><p className="font-bold text-amber-400">{ai?.retention_prediction?.avg_watch_seconds || 6.2}s</p></div>
+                    <div className="rounded-xl bg-white/5 p-3"><p className="text-gray-400 text-xs">Completion</p><p className="font-bold text-amber-300">{completion}%</p></div>
+                    <div className="rounded-xl bg-white/5 p-3"><p className="text-gray-400 text-xs">Replay</p><p className="font-bold text-purple-300">{ai?.retention_prediction?.replay_factor || 1.2}x</p></div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm mt-3">
+                    <div className="rounded-xl bg-white/5 p-3"><p className="text-gray-400 text-xs">Follow CTR</p><p className="font-bold">{ai?.conversion_metrics?.follow_ctr || 2.3}%</p></div>
+                    <div className="rounded-xl bg-white/5 p-3"><p className="text-gray-400 text-xs">Profile CTR</p><p className="font-bold">{ai?.conversion_metrics?.profile_ctr || 5.1}%</p></div>
+                    <div className="rounded-xl bg-white/5 p-3"><p className="text-gray-400 text-xs">Product CTR</p><p className="font-bold">{ai?.conversion_metrics?.product_ctr || 1.2}%</p></div>
+                </div>
+
+                <div className="mt-4 p-3 rounded-xl bg-cyan-500/10 border border-cyan-400/20">
+                    <p className="text-xs text-cyan-300 flex items-center gap-2"><Sparkles size={14} /> AI Insight</p>
+                    <p className="text-sm mt-1">{ai?.ai_insight || 'Strong opening frame nhung pacing giam sau 4s lam tut retention. Can rut ngan intro va dua CTA som hon.'}</p>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="rounded-xl bg-white/5 p-3">
+                        <p className="text-xs text-gray-400">Predicted Range</p>
+                        <p className="font-bold">{predictedRange.low} - {predictedRange.high} views</p>
+                        <p className="text-xs text-gray-500">Confidence: {confidence}%</p>
+                    </div>
+                    <div className="rounded-xl bg-white/5 p-3">
+                        <p className="text-xs text-gray-400">Velocity</p>
+                        <p className="font-bold flex items-center gap-1"><TrendingUp size={14} className="text-green-400" /> {velocity >= 65 ? 'Accelerating' : 'Slowing'}</p>
+                        <p className="text-xs text-gray-500">Trend Match: {ai?.trend_intelligence?.alignment_score >= 70 ? 'HIGH' : 'MEDIUM'}</p>
                     </div>
                 </div>
+
+                {expanded && (
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div className="rounded-xl bg-white/5 p-3">
+                            <p className="text-xs text-gray-400 mb-1">Temporal Analytics</p>
+                            <p>1h: {ai?.temporal_analytics?.h1_views || 50} views</p>
+                            <p>2h: {ai?.temporal_analytics?.h2_views || 400} views</p>
+                            <p>4h: {ai?.temporal_analytics?.h4_views || 2000} views</p>
+                        </div>
+                        <div className="rounded-xl bg-white/5 p-3">
+                            <p className="text-xs text-gray-400 mb-1">Recommended Actions</p>
+                            {(ai?.recommended_actions || ['Repost luc 7PM', 'Rut intro 20%', 'Tang sang cover', 'Dua CTA vao giay 4']).slice(0, 4).map((a: string) => (
+                                <p key={a}>- {a}</p>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
 };
-
-const Activity = ({ size, className }: { size?: number, className?: string }) => <div className={className}><Zap size={size} /></div>;

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
     Scissors, Waves, VolumeX, Type, Layers, 
-    Play, Pause, SkipBack, SkipForward, Maximize2, Download
+    Play, Pause, SkipBack, SkipForward, Maximize2, Download, ImageIcon
 } from 'lucide-react';
 
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Languages, ArrowRight, Sparkles, FileText, CheckCircle2, History, RotateCcw, Loader2 } from 'lucide-react';
+import { Languages, ArrowRight, Sparkles, FileText, CheckCircle2, History, RotateCcw, Loader2, Workflow } from 'lucide-react';
 
 import { rewriteText } from '@/shared/api/ai.api';
 
