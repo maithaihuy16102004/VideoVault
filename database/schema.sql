@@ -282,6 +282,102 @@ CREATE TABLE rate_limit_policies (
 );
 
 -- ===========================================
+-- 9. TIKTOK VN GROWTH INTELLIGENCE TABLES
+-- ===========================================
+CREATE TABLE trending_hashtags_vn (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    hashtag VARCHAR(120) NOT NULL,
+    niche VARCHAR(120) NOT NULL DEFAULT 'general',
+    layer VARCHAR(40) NOT NULL
+        CONSTRAINT chk_trending_hashtags_layer CHECK (layer IN ('HIGH_DISCOVERY', 'LOW_COMPETITION_HIGH_ENGAGEMENT', 'TREND_VN', 'SHOP_CONVERSION')),
+    posts BIGINT CHECK (posts IS NULL OR posts >= 0),
+    likes BIGINT CHECK (likes IS NULL OR likes >= 0),
+    like_post_ratio NUMERIC(18,6),
+    engagement VARCHAR(20),
+    saturation VARCHAR(20),
+    growth VARCHAR(20),
+    score NUMERIC(8,2),
+    source VARCHAR(80) DEFAULT 'manual_seed',
+    crawled_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    metadata JSONB DEFAULT '{}'::jsonb,
+    UNIQUE(hashtag, niche)
+);
+
+CREATE INDEX idx_trending_hashtags_vn_niche_layer ON trending_hashtags_vn(niche, layer);
+CREATE INDEX idx_trending_hashtags_vn_score ON trending_hashtags_vn(score DESC);
+CREATE INDEX idx_trending_hashtags_vn_crawled_at ON trending_hashtags_vn(crawled_at DESC);
+
+CREATE TABLE trending_captions_vn (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    caption_pattern TEXT NOT NULL,
+    archetype VARCHAR(80) NOT NULL DEFAULT 'general',
+    audience VARCHAR(120),
+    psychological_trigger VARCHAR(160),
+    retention_score NUMERIC(8,2),
+    save_rate NUMERIC(8,4),
+    share_rate NUMERIC(8,4),
+    ctr NUMERIC(8,4),
+    source VARCHAR(80) DEFAULT 'manual_seed',
+    crawled_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    metadata JSONB DEFAULT '{}'::jsonb
+);
+
+CREATE INDEX idx_trending_captions_vn_archetype ON trending_captions_vn(archetype);
+CREATE INDEX idx_trending_captions_vn_retention ON trending_captions_vn(retention_score DESC);
+
+CREATE TABLE trending_audios_vn (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    audio_id VARCHAR(160),
+    title VARCHAR(255) NOT NULL,
+    niche VARCHAR(120) NOT NULL DEFAULT 'general',
+    growth VARCHAR(20),
+    usage_count BIGINT CHECK (usage_count IS NULL OR usage_count >= 0),
+    completion_lift NUMERIC(8,4),
+    source VARCHAR(80) DEFAULT 'manual_seed',
+    crawled_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    metadata JSONB DEFAULT '{}'::jsonb
+);
+
+CREATE INDEX idx_trending_audios_vn_niche ON trending_audios_vn(niche);
+CREATE INDEX idx_trending_audios_vn_growth ON trending_audios_vn(growth);
+
+CREATE TABLE trending_products_vn (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_name VARCHAR(255) NOT NULL,
+    category VARCHAR(120) NOT NULL DEFAULT 'general',
+    shop_keyword VARCHAR(160),
+    ctr NUMERIC(8,4),
+    conversion_rate NUMERIC(8,4),
+    growth VARCHAR(20),
+    source VARCHAR(80) DEFAULT 'manual_seed',
+    crawled_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    metadata JSONB DEFAULT '{}'::jsonb
+);
+
+CREATE INDEX idx_trending_products_vn_category ON trending_products_vn(category);
+CREATE INDEX idx_trending_products_vn_conversion ON trending_products_vn(conversion_rate DESC);
+
+CREATE TABLE vn_viral_memory (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    channel_id VARCHAR(160),
+    niche VARCHAR(120) NOT NULL DEFAULT 'general',
+    audience VARCHAR(120),
+    hook TEXT NOT NULL,
+    caption TEXT,
+    hashtags JSONB DEFAULT '[]'::jsonb,
+    retention NUMERIC(8,4),
+    saves NUMERIC(8,4),
+    shares NUMERIC(8,4),
+    ctr NUMERIC(8,4),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC'),
+    metadata JSONB DEFAULT '{}'::jsonb
+);
+
+CREATE INDEX idx_vn_viral_memory_niche_audience ON vn_viral_memory(niche, audience);
+CREATE INDEX idx_vn_viral_memory_retention ON vn_viral_memory(retention DESC);
+CREATE INDEX idx_vn_viral_memory_ctr ON vn_viral_memory(ctr DESC);
+
+-- ===========================================
 -- VIEWS — #16 materialized view for stats
 -- ===========================================
 

@@ -64,6 +64,12 @@ const analyticsRoute = createRoute({
     component: Analytics,
 });
 
+const promotionAuditRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'admin/promotion-audit',
+    component: lazyRouteComponent(() => import('@/routes/admin/promotion-audit')),
+});
+
 // Route Tree
 const routeTree = rootRoute.addChildren([
     indexRoute,
@@ -133,6 +139,7 @@ const routeTree = rootRoute.addChildren([
     }),
     adminDashboardRoute,
     analyticsRoute,
+    promotionAuditRoute,
 ]);
 
 // eslint-disable-next-line react-refresh/only-export-components

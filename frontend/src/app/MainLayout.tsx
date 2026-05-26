@@ -4,7 +4,7 @@ import {
     CreditCard, ShieldAlert, BarChart3, Users, Hash,
     Workflow, FileAudio, Languages, Mic2,
     Server, ShoppingBag, FolderKanban, LineChart,
-    Megaphone, PlayCircle, Zap
+    Megaphone, PlayCircle, Zap, ClipboardList
 } from 'lucide-react';
 import { useAuth } from '../shared/hooks/useAuth';
 import { Link, Outlet, useLocation, useNavigate } from '@tanstack/react-router';
@@ -57,6 +57,7 @@ const MainLayout: React.FC = () => {
         const path = location.pathname;
         if (path.includes('admin/dashboard')) return 'admin-dashboard';
         if (path.includes('admin/analytics')) return 'admin-analytics';
+        if (path.includes('admin/promotion-audit')) return 'admin-promotion-audit';
         if (path.includes('downloads/account')) return 'dl-account';
         if (path.includes('downloads/hashtag')) return 'dl-hashtag';
         if (path.includes('downloads')) return 'dl-history';
@@ -83,6 +84,7 @@ const MainLayout: React.FC = () => {
         items: [
             { id: 'admin-dashboard', icon: ShieldAlert, label: 'Quản lý hệ thống', path: '/admin/dashboard' },
             { id: 'admin-analytics', icon: BarChart3, label: 'Thống kê tổng thể', path: '/admin/analytics' },
+            { id: 'admin-promotion-audit', icon: ClipboardList, label: 'Audit quảng bá AI', path: '/admin/promotion-audit' },
         ]
     }] : [];
 

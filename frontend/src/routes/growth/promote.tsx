@@ -102,6 +102,24 @@ interface PromotionRiskBreakdown {
     objectiveMismatchRisk: number;
 }
 
+interface CompetitiveGap {
+    feature: string;
+    user: string;
+    top_niche: string;
+    score: number;
+    status: 'MATCH' | 'PARTIAL' | 'GAP';
+}
+
+interface CompetitivePromotionIntelligence {
+    promotion_goal: string;
+    confidence: number;
+    evidenceLevel?: string;
+    reason: string[];
+    competitor_insights: string[];
+    fixes_before_promote: string[];
+    competitive_data_notice?: string;
+}
+
 interface PromotionDecision {
     videoId: string;
     action: 'SCALE' | 'TEST_SMALL' | 'FIX_CREATIVE_FIRST' | 'DO_NOT_PROMOTE' | 'NEED_PRIVATE_ANALYTICS';
@@ -132,6 +150,50 @@ interface PromotionDecision {
     } | null;
     dataQuality: PromotionDataQuality;
     llmExplanation: string;
+    promotion_goal?: string;
+    niche_match_score?: number;
+    matched_niche_archetype?: string;
+    competitive_reason?: string[];
+    competitor_insights?: string[];
+    fixes_before_promote?: string[];
+    gap_analysis?: CompetitiveGap[];
+    conversion_pattern?: { views: number; followers: number; sales: number };
+    business_stage?: { accountStage: string; objective_bias: string[] };
+    saturation?: { saturationScore: number; diminishingReturnRisk: string; reason: string };
+    source_reliability?: { evidenceLevel: string; score: number; warning?: string; max_decision_confidence?: number };
+    competitive_data_notice?: string;
+    retention_truth?: {
+        source: string;
+        retention_1s: number;
+        retention_3s: number;
+        completion_rate: number;
+        scale_signal: string;
+        reason: string;
+        timeline_diagnosis?: {
+            points?: Array<{ second: number; retention: number; event?: string }>;
+            biggest_drop?: { window: string; drop_pct: number };
+            diagnosis: string;
+            fix: string;
+        };
+    };
+    comment_psychology?: {
+        buying_intent_score: number;
+        negative_intent_score: number;
+        conversion_signal: string;
+        emotion_intelligence?: { dominant_emotion: string; emotion_clusters: Record<string, number> };
+    };
+    frame_visual_ai?: {
+        source: string;
+        ready?: boolean;
+        outfit_reveal_second?: number;
+        motion_velocity_score?: number;
+        mirror_shot_likelihood?: number;
+        warning?: string;
+    };
+    creative_fatigue?: { fatigue_score: number; risk: string; reason: string };
+    budget_allocation?: { mode: string; recommended_daily_budget: number; rules: string[] };
+    scale_explanation?: { why_this_video_can_scale: string[]; failure_prediction: string[] };
+    winner_dna_match?: { ready: boolean; similarity_score: number; reason: string; matched_hashtags?: string[] };
 }
 
 interface CreatorArchetype {
@@ -276,6 +338,20 @@ interface AiStrategy {
     creator_archetype?: CreatorArchetype;
     hashtag_strategy?: HashtagStrategy;
     trend_intelligence?: TrendIntelligence;
+    competitive_promotion_intelligence?: CompetitivePromotionIntelligence;
+    business_stage?: { accountStage: string; objective_bias: string[] };
+    saturation_intelligence?: { saturationScore: number; diminishingReturnRisk: string; reason: string };
+    source_reliability?: { evidenceLevel: string; score: number; warning?: string; max_decision_confidence?: number };
+    real_competitor_crawler?: { live_data_available: boolean; source: string; message: string };
+    strategy_match?: {
+        matched_archetype: string;
+        match_score: number;
+        recommended_objective: string;
+        competitor_insights: string[];
+        fixes_before_promote: string[];
+        gap_analysis: CompetitiveGap[];
+        conversion_pattern: { views: number; followers: number; sales: number };
+    };
     drift_monitoring?: DriftMonitoring;
     automation?: {
         recommended_actions: { type: string, action: string, impact: string }[];
@@ -347,6 +423,55 @@ interface ChannelInfo {
         audience_profile: string;
         health_tier: string;
     };
+    analysis_scope?: {
+        mode: 'QUICK_SCAN' | 'FULL_CHANNEL_ANALYSIS';
+        video_count: number;
+        sort_by?: string;
+        baseline_built?: boolean;
+        historical_patterns_ready?: boolean;
+        all_public_videos_attempted?: boolean;
+        strategy_ready?: boolean;
+        is_enough_for_scale: boolean;
+    };
+    objective_top6?: {
+        top6_awareness: string[];
+        top6_followers: string[];
+        top6_profile: string[];
+        top6_sales_messages: string[];
+        final_mix: { video_id: string; objective_bucket: string; objective?: string | null }[];
+        business_stage: string;
+    };
+    winner_dna?: {
+        ready: boolean;
+        sample_size: number;
+        top_hashtags?: string[];
+        dominant_archetypes?: string[];
+        patterns?: string[];
+    };
+    portfolio_optimization?: {
+        self_competition_risk: string;
+        warnings: string[];
+        objective_distribution: Record<string, number>;
+        archetype_distribution: Record<string, number>;
+    };
+    evolutionary_memory?: {
+        ready: boolean;
+        rising_patterns: Array<{ pattern: string; change_pct: number }>;
+        fatiguing_patterns: Array<{ pattern: string; change_pct: number }>;
+        recommendation?: string;
+    };
+    next_content_strategy?: {
+        source: string;
+        top_winner_tags: string[];
+        dominant_winner_archetypes: string[];
+        avoid_patterns: string[];
+        ideas: Array<{ title: string; hook: string; format: string; why: string }>;
+    };
+    creative_center_intelligence?: {
+        source: string;
+        ready: boolean;
+        message: string;
+    };
 }
 
 interface PromotePack {
@@ -377,10 +502,21 @@ const fmt = (n: number) => {
 const fmtVND = (n: number) => n.toLocaleString('vi-VN') + 'đ';
 
 const detectLinkType = (url: string): LinkType => {
-    if (!url.includes('tiktok.com')) return 'unknown';
-    if (url.includes('/video/') || url.includes('/photo/')) return 'video';
-    if (url.match(/@[\w.]+/)) return 'channel';
+    const normalized = normalizeTikTokUrl(url);
+    if (!normalized.includes('tiktok.com')) return 'unknown';
+    if (normalized.includes('/video/') || normalized.includes('/photo/')) return 'video';
+    if (normalized.match(/@[\w.]+/)) return 'channel';
     return 'unknown';
+};
+
+const normalizeTikTokUrl = (url: string) => {
+    const trimmed = url.trim();
+    if (!trimmed) return trimmed;
+    if (trimmed.startsWith('@')) return `https://www.tiktok.com/${trimmed}`;
+    if (trimmed.startsWith('www.')) return `https://${trimmed}`;
+    if (trimmed.startsWith('tiktok.com/')) return `https://www.${trimmed}`;
+    if (trimmed.startsWith('vm.tiktok.com/') || trimmed.startsWith('vt.tiktok.com/')) return `https://${trimmed}`;
+    return trimmed;
 };
 
 // ─── Color gradient lookup (avoids runtime string manipulation) ─────
@@ -535,6 +671,38 @@ const StatCard = memo<{ icon: React.ElementType; label: string; value: string; s
 ));
 StatCard.displayName = 'StatCard';
 
+const RetentionSparkline = memo<{ points?: Array<{ second: number; retention: number; event?: string }> }>(({ points = [] }) => {
+    const normalized = points.length ? points : [
+        { second: 0, retention: 100 },
+        { second: 1, retention: 0 },
+        { second: 3, retention: 0 },
+        { second: 5, retention: 0 },
+        { second: 8, retention: 0 },
+    ];
+    const path = normalized.map((point, index) => {
+        const x = (index / Math.max(normalized.length - 1, 1)) * 100;
+        const y = 32 - Math.max(0, Math.min(32, (point.retention / 100) * 32));
+        return `${index === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+    }).join(' ');
+    return (
+        <div className="mt-2">
+            <svg viewBox="0 0 100 34" className="h-10 w-full overflow-visible">
+                <path d="M 0 32 L 100 32" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+                <path d={path} fill="none" stroke="#22d3ee" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                {normalized.map((point, index) => {
+                    const x = (index / Math.max(normalized.length - 1, 1)) * 100;
+                    const y = 32 - Math.max(0, Math.min(32, (point.retention / 100) * 32));
+                    return <circle key={`${point.second}-${index}`} cx={x} cy={y} r="2" fill="#67e8f9" />;
+                })}
+            </svg>
+            <div className="flex justify-between text-[8px] text-gray-500">
+                {normalized.map((point, index) => <span key={`${point.second}-label-${index}`}>{point.second}s {Math.round(point.retention)}%</span>)}
+            </div>
+        </div>
+    );
+});
+RetentionSparkline.displayName = 'RetentionSparkline';
+
 // Growth Progress Bar — optimized: uses barGradients lookup instead of string manipulation
 const GrowthBar = memo<{ current: number; target: number; label: string; color: string; icon: React.ElementType }>(
     ({ current, target, label, color, icon: Icon }) => {
@@ -668,6 +836,14 @@ const metricLabels: Record<string, string> = {
     cost_per_view: 'chi phí mỗi lượt xem',
 };
 
+const evidenceLabels: Record<string, string> = {
+    ESTIMATED: 'Ước lượng heuristic',
+    PUBLIC_ONLY: 'Dữ liệu public',
+    COMPETITOR_BENCHMARK: 'Benchmark tham khảo',
+    PRIVATE_ANALYTICS: 'Có private analytics',
+    PAID_HISTORY_VERIFIED: 'Paid history verified',
+};
+
 const organicRankLabels: Record<string, string> = {
     WEAK: 'Yếu',
     NORMAL: 'Bình thường',
@@ -723,6 +899,78 @@ const paidCtaLabel = (decision?: PromotionDecision) => {
     if (decision.action === 'FIX_CREATIVE_FIRST') return 'Cần sửa creative trước';
     return 'Không nên quảng bá';
 };
+
+const objectiveBucketLabels: Record<string, string> = {
+    awareness: 'Nhận diện / Lượt xem',
+    follower: 'Kéo follower',
+    profile: 'Kéo hồ sơ',
+    sales: 'Tin nhắn / Bán hàng',
+    best_fit: 'Phù hợp nhất',
+};
+
+const objectiveByBucket: Record<string, string> = {
+    awareness: 'VIDEO_VIEWS',
+    follower: 'FOLLOWERS',
+    profile: 'PROFILE_VIEWS',
+    sales: 'MESSAGES',
+};
+
+const goalByObjective: Record<string, PromoteGoal> = {
+    VIDEO_VIEWS: 'views',
+    FOLLOWERS: 'followers',
+    PROFILE_VIEWS: 'profile',
+    MESSAGES: 'sales',
+    PRODUCT_CLICKS: 'sales',
+    SALES: 'sales',
+    WEBSITE_TRAFFIC: 'profile',
+    LEADS: 'sales',
+};
+
+const objectiveByGoal: Record<PromoteGoal, string> = {
+    engagement: 'VIDEO_VIEWS',
+    views: 'VIDEO_VIEWS',
+    followers: 'FOLLOWERS',
+    profile: 'PROFILE_VIEWS',
+    sales: 'MESSAGES',
+};
+
+const getPromoteGoalFromObjective = (objective?: string | null): PromoteGoal =>
+    objective ? (goalByObjective[objective] || 'views') : 'views';
+
+const getTikTokPromoteSetup = (objective?: string | null, action: string = 'TEST_SMALL') => {
+    const optionMap: Record<string, string> = {
+        VIDEO_VIEWS: 'Nhiều lượt xem video hơn',
+        FOLLOWERS: 'Nhiều follower hơn',
+        PROFILE_VIEWS: 'Tăng lượt xem hồ sơ',
+        MESSAGES: 'Tăng số lượng tin nhắn TikTok',
+        PRODUCT_CLICKS: 'Thêm giao dịch mua sản phẩm',
+        SALES: 'Thêm giao dịch mua sản phẩm',
+        WEBSITE_TRAFFIC: 'Nhiều lượt truy cập website hơn',
+        LEADS: 'Tăng số lượng tin nhắn TikTok',
+    };
+    const tabMap: Record<string, string> = {
+        VIDEO_VIEWS: 'Thúc đẩy tài khoản',
+        FOLLOWERS: 'Thúc đẩy tài khoản',
+        PROFILE_VIEWS: 'Thúc đẩy tài khoản',
+        MESSAGES: 'Thu hút khách hàng tiềm năng',
+        PRODUCT_CLICKS: 'Tăng doanh số',
+        SALES: 'Tăng doanh số',
+        WEBSITE_TRAFFIC: 'Thu hút khách hàng tiềm năng',
+        LEADS: 'Thu hút khách hàng tiềm năng',
+    };
+    const target = objective || 'VIDEO_VIEWS';
+    return {
+        tab: tabMap[target] || 'Thúc đẩy tài khoản',
+        option: optionMap[target] || 'Nhiều lượt xem video hơn',
+        package: action === 'SCALE' ? 'Gói tùy chỉnh' : 'Gói thấp / Tùy chỉnh',
+        instruction: action === 'SCALE'
+            ? 'Chỉ tăng 20-25% ngân sách mỗi ngày nếu KPI đạt.'
+            : 'Chọn ngân sách thấp nhất trong 24 giờ đầu để test an toàn.',
+    };
+};
+
+const getTikTokPromoteUrl = (video: VideoData) =>
+    `https://www.tiktok.com/promote/web/delivery?item_id=${encodeURIComponent(video.id)}&enter_from=video`;
 
 const DecisionPanel = memo<{ video: VideoData; expanded: boolean }>(({ video, expanded }) => {
     const decision = video.aiStrategy.promotion_decision;
@@ -1152,6 +1400,7 @@ const TikTokPromote: React.FC = () => {
         return {
             ...data,
             videos: processedVideos,
+            analysis_scope: data.analysis_scope,
         };
     }, []);
 
@@ -1159,9 +1408,12 @@ const TikTokPromote: React.FC = () => {
     const refreshData = useCallback(async () => {
         if (!channelUrl.trim() || isRefreshing) return;
         setIsRefreshing(true);
+        const normalizedUrl = normalizeTikTokUrl(channelUrl);
+        const currentMode = channel?.analysis_scope?.mode === 'FULL_CHANNEL_ANALYSIS' ? 'FULL_CHANNEL_ANALYSIS' : 'QUICK_SCAN';
+        const extraParams = currentMode === 'FULL_CHANNEL_ANALYSIS' ? '&video_limit=0&live_competitor=true' : '';
 
         try {
-            const res = await fetch(`http://localhost:5054/api/refresh?url=${encodeURIComponent(channelUrl)}`);
+            const res = await fetch(`http://localhost:5054/api/refresh?url=${encodeURIComponent(normalizedUrl)}&mode=${currentMode}${extraParams}`);
             if (!res.ok) throw new Error('Refresh failed');
             const data = await res.json();
             const processed = processApiData(data, channel);
@@ -1169,7 +1421,7 @@ const TikTokPromote: React.FC = () => {
             setLastRefresh(new Date());
         } catch {
             try {
-                const res = await fetch(`http://localhost:5054/api/analyze?url=${encodeURIComponent(channelUrl)}`);
+                const res = await fetch(`http://localhost:5054/api/analyze?url=${encodeURIComponent(normalizedUrl)}&mode=${currentMode}${extraParams}`);
                 if (res.ok) {
                     const data = await res.json();
                     const processed = processApiData(data, channel);
@@ -1205,8 +1457,9 @@ const TikTokPromote: React.FC = () => {
 
     // Main analyze function
     const analyzeContent = useCallback(async (url?: string) => {
-        const targetUrl = url || channelUrl;
+        const targetUrl = normalizeTikTokUrl(url || channelUrl);
         if (!targetUrl.trim()) return;
+        setChannelUrl(targetUrl);
 
         setPhase('analyzing');
         setAnalyzeProgress(0);
@@ -1214,6 +1467,9 @@ const TikTokPromote: React.FC = () => {
 
         const type = detectLinkType(targetUrl);
         const isVideo = type === 'video';
+        const analysisMode = isVideo ? 'QUICK_SCAN' : 'FULL_CHANNEL_ANALYSIS';
+        const analysisParams = isVideo ? 'mode=QUICK_SCAN' : 'mode=FULL_CHANNEL_ANALYSIS&video_limit=0&live_competitor=true';
+        if (!isVideo) setAutoRefresh(false);
 
         const steps = isVideo ? [
             '🔗 Kết nối TikTok API...',
@@ -1225,15 +1481,14 @@ const TikTokPromote: React.FC = () => {
             '✅ Hoàn tất! Dữ liệu sẵn sàng ✨'
         ] : [
             '🔗 Kết nối TikTok API...',
-            '📥 Tải metadata kênh & video...',
-            '🧠 AI phân tích video 1/6 — Hook & Giữ chân...',
-            '🧠 AI phân tích video 2/6 — Viral Mechanics...',
-            '🧠 AI phân tích video 3/6 - tín hiệu chuyển đổi...',
-            '🧠 AI phân tích video 4/6 — DNA nội dung...',
-            '🧠 AI phân tích video 5/6 - giọng nói và hình ảnh...',
-            '🧠 AI phân tích video 6/6 — Promote Decision...',
-            '🔍 Tổng hợp Viral Patterns & Channel Intelligence...',
-            '✅ Hoàn tất! AI Growth Report sẵn sàng ✨'
+            '📥 Crawl toàn bộ video public lấy được từ kênh...',
+            '📊 Dựng baseline kênh và phân vị hiệu suất...',
+            '🏆 Tìm video thắng lịch sử và video yếu...',
+            '🧬 Phân cụm creative archetype...',
+            '🎯 Chấm objective riêng cho view/follower/profile/sales...',
+            '💰 Chọn Top 6 video đáng xuống tiền nhất...',
+            '🛡️ Áp guardrail ngân sách và paid-history...',
+            '✅ Hoàn tất! Full Channel Intelligence sẵn sàng'
         ];
 
         let step = 0;
@@ -1250,7 +1505,7 @@ const TikTokPromote: React.FC = () => {
         }, stepDuration);
 
         try {
-            const res = await fetch(`http://localhost:5054/api/analyze?url=${encodeURIComponent(targetUrl)}`);
+            const res = await fetch(`http://localhost:5054/api/analyze?url=${encodeURIComponent(targetUrl)}&${analysisParams}`);
             if (!res.ok) {
                 let message = `API Error (${res.status})`;
                 try {
@@ -1271,6 +1526,7 @@ const TikTokPromote: React.FC = () => {
                 setChannel(processed);
                 useStore.getState().setAnalyzedChannel(processed);
                 setLinkType(data.type || type);
+                if (analysisMode === 'FULL_CHANNEL_ANALYSIS') setAutoRefresh(false);
                 setPhase('results');
                 setLastRefresh(new Date());
 
@@ -1289,8 +1545,8 @@ const TikTokPromote: React.FC = () => {
     // Paste handler — fixed: added preventDefault to avoid double pasting
     const handlePaste = useCallback((e: React.ClipboardEvent) => {
         e.preventDefault();
-        const pastedText = e.clipboardData.getData('text');
-        setChannelUrl(pastedText.trim());
+        const pastedText = normalizeTikTokUrl(e.clipboardData.getData('text'));
+        setChannelUrl(pastedText);
         if (pastedText.includes('tiktok.com')) {
             setTimeout(() => {
                 const type = detectLinkType(pastedText);
@@ -1325,20 +1581,107 @@ const TikTokPromote: React.FC = () => {
         return rank === 'VIRAL' || rank === 'BREAKOUT';
     }).length, [sortedVideos]);
     const heroVideo = useMemo(() => (linkType === 'video' && channel?.videos?.[0]) || null, [linkType, channel]);
+    const topPaidMix = useMemo(() => {
+        if (channel?.analysis_scope?.mode !== 'FULL_CHANNEL_ANALYSIS') return [];
+        const byId = new Map((channel.videos || []).map(video => [video.id, video]));
+        const fromMix = (channel.objective_top6?.final_mix || [])
+            .map(item => {
+                const video = byId.get(item.video_id);
+                if (!video || !canRunPaidTest(video.aiStrategy?.promotion_decision)) return null;
+                return {
+                    video,
+                    bucket: item.objective_bucket,
+                    objective: item.objective || objectiveByBucket[item.objective_bucket] || video.aiStrategy?.promotion_decision?.objective || null,
+                };
+            })
+            .filter(Boolean) as Array<{ video: VideoData; bucket: string; objective: string | null }>;
+
+        const seen = new Set(fromMix.map(item => item.video.id));
+        const fallback = (channel.videos || [])
+            .filter(video => !seen.has(video.id) && canRunPaidTest(video.aiStrategy?.promotion_decision))
+            .sort((a, b) => {
+                const ad = a.aiStrategy.promotion_decision;
+                const bd = b.aiStrategy.promotion_decision;
+                const as = (ad?.confidence || 0) + (ad?.scores?.viewBoost || 0) + (ad?.scores?.profilePull || 0) + (ad?.scores?.followerGrowth || 0) + (ad?.scores?.salesIntent || 0) - (ad?.scores?.risk || 0);
+                const bs = (bd?.confidence || 0) + (bd?.scores?.viewBoost || 0) + (bd?.scores?.profilePull || 0) + (bd?.scores?.followerGrowth || 0) + (bd?.scores?.salesIntent || 0) - (bd?.scores?.risk || 0);
+                return bs - as;
+            })
+            .map(video => ({
+                video,
+                bucket: 'best_fit',
+                objective: video.aiStrategy?.promotion_decision?.objective || video.aiStrategy?.promotion_decision?.promotion_goal || null,
+            }));
+        return [...fromMix, ...fallback].slice(0, 6);
+    }, [channel]);
+    const shouldShowVideoLibrary = !(channel?.analysis_scope?.mode === 'FULL_CHANNEL_ANALYSIS' && linkType === 'channel');
+    const selectedPromoteObjective = objectiveByGoal[selectedGoal] || 'VIDEO_VIEWS';
+    const selectedTikTokSetup = getTikTokPromoteSetup(
+        selectedPromoteObjective,
+        selectedVideo?.aiStrategy?.promotion_decision?.action || 'TEST_SMALL',
+    );
 
     // Stable callbacks for VideoCard
     const handleToggleExpand = useCallback((id: string) => {
         setExpandedVideo(prev => prev === id ? null : id);
     }, []);
 
-    const handlePromote = useCallback((video: VideoData) => {
+    const handlePromote = useCallback(async (video: VideoData, objectiveOverride?: string | null) => {
         if (!canRunPaidTest(video.aiStrategy.promotion_decision)) return;
-        setSelectedVideo(video);
-        setSelectedGoal(video.aiStrategy.goal);
+        const scope = channel?.analysis_scope;
+        let targetVideo = video;
+        let targetObjective = objectiveOverride || video.aiStrategy.promotion_decision?.promotion_goal || video.aiStrategy.promotion_decision?.objective || null;
+        if (!scope || scope.mode !== 'FULL_CHANNEL_ANALYSIS' || !scope.is_enough_for_scale) {
+            setIsRefreshing(true);
+            try {
+                const res = await fetch(`http://localhost:5054/api/analyze?url=${encodeURIComponent(normalizeTikTokUrl(channelUrl))}&mode=FULL_CHANNEL_ANALYSIS&video_limit=120`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const processed = processApiData(data, channel);
+                    setChannel(processed);
+                    setLastRefresh(new Date());
+                    targetVideo = processed.videos.find((v: VideoData) => v.id === video.id) || video;
+                    targetObjective = objectiveOverride || targetVideo.aiStrategy.promotion_decision?.promotion_goal || targetVideo.aiStrategy.promotion_decision?.objective || targetObjective;
+                }
+            } catch {
+                targetVideo = video;
+            } finally {
+                setIsRefreshing(false);
+            }
+        }
+        setSelectedVideo(targetVideo);
+        setSelectedGoal(getPromoteGoalFromObjective(targetObjective));
         setSelectedPack(null);
         setPaymentSuccess(false);
         setShowPromoteModal(true);
-    }, []);
+    }, [channel, channelUrl, processApiData]);
+
+    const runFullChannelAnalysis = useCallback(async () => {
+        if (!channelUrl.trim() || isRefreshing) return;
+        setIsRefreshing(true);
+        setError(null);
+        try {
+            const fullUrl = normalizeTikTokUrl(channelUrl);
+            const res = await fetch(`http://localhost:5054/api/analyze?url=${encodeURIComponent(fullUrl)}&mode=FULL_CHANNEL_ANALYSIS&video_limit=0&live_competitor=true`);
+            if (!res.ok) {
+                let message = `API Error (${res.status})`;
+                try {
+                    const errData = await res.json();
+                    if (errData?.detail) message = errData.detail;
+                } catch { /* keep default */ }
+                throw new Error(message);
+            }
+            const data = await res.json();
+            const processed = processApiData(data, channel);
+            setChannel(processed);
+            useStore.getState().setAnalyzedChannel(processed);
+            setLastRefresh(new Date());
+            setLinkType(data.type || detectLinkType(fullUrl));
+        } catch (err: any) {
+            setError(err.message || 'Không thể phân tích toàn kênh');
+        } finally {
+            setIsRefreshing(false);
+        }
+    }, [channelUrl, channel, isRefreshing, processApiData]);
 
     const handleToggleCompare = useCallback((id: string) => {
         setSelectedForCompare(prev => {
@@ -1407,7 +1750,7 @@ const TikTokPromote: React.FC = () => {
                             )}
                             <button onClick={() => analyzeContent()} disabled={!channelUrl.trim()}
                                 className="px-5 py-2.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-pink-500/25 transition-all active:scale-95 disabled:opacity-30 flex items-center gap-2 text-sm">
-                                <Sparkles size={15} /> Phân Tích AI
+                                <Sparkles size={15} /> {linkType === 'channel' ? 'Phân tích toàn kênh' : 'Phân Tích AI'}
                             </button>
                         </div>
                     </div>
@@ -1435,7 +1778,7 @@ const TikTokPromote: React.FC = () => {
                                 ) : (
                                     <>
                                         <Users size={14} className="text-cyan-400" />
-                                        <span className="text-xs text-gray-400">Đã phát hiện: <strong className="text-cyan-300">Link Kênh</strong> — AI sẽ phân tích toàn bộ kênh và các video</span>
+                                        <span className="text-xs text-gray-400">Đã phát hiện: <strong className="text-cyan-300">Link Kênh</strong> — mặc định crawl toàn kênh và chọn Top 6 video đáng xuống tiền</span>
                                     </>
                                 )}
                             </motion.div>
@@ -1577,6 +1920,15 @@ const TikTokPromote: React.FC = () => {
                     <h1 className="text-xl font-bold flex items-center gap-2 flex-wrap">
                         <span className="bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">TikTok Promote</span>
                         <span className="text-[10px] px-2 py-0.5 bg-green-500/15 text-green-400 rounded-full font-bold border border-green-500/20">Phân tích hoàn tất</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${
+                            channel?.analysis_scope?.mode === 'FULL_CHANNEL_ANALYSIS'
+                                ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/20'
+                                : 'bg-amber-500/15 text-amber-300 border-amber-500/20'
+                        }`}>
+                            {channel?.analysis_scope?.mode === 'FULL_CHANNEL_ANALYSIS'
+                                ? `Full Channel: ${channel.analysis_scope.video_count} video`
+                                : `Quick Scan: ${channel?.analysis_scope?.video_count || channel?.videos.length || 0} video mới nhất`}
+                        </span>
                         <LivePulse active={autoRefresh} />
                     </h1>
                     <div className="flex items-center gap-3 mt-1">
@@ -1591,25 +1943,48 @@ const TikTokPromote: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                     <button onClick={() => setAutoRefresh(!autoRefresh)}
+                        disabled={channel?.analysis_scope?.mode === 'FULL_CHANNEL_ANALYSIS'}
                         className={`flex items-center gap-1.5 px-3 py-2 text-xs rounded-lg transition-all border ${
                             autoRefresh
                                 ? 'bg-green-500/10 text-green-400 border-green-500/20'
                                 : 'bg-white/5 text-gray-500 border-white/5'
                         }`}>
                         <Wifi size={12} />
-                        {autoRefresh ? 'Auto-refresh ON' : 'Auto-refresh OFF'}
+                        {channel?.analysis_scope?.mode === 'FULL_CHANNEL_ANALYSIS' ? 'Auto-refresh OFF cho Full' : autoRefresh ? 'Auto-refresh ON' : 'Auto-refresh OFF'}
                     </button>
                     <button onClick={refreshData} disabled={isRefreshing}
                         className="flex items-center gap-1.5 px-3 py-2 text-xs text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-all border border-white/5 disabled:opacity-50">
                         <RefreshCw size={12} className={isRefreshing ? 'animate-spin' : ''} />
                         {isRefreshing ? 'Đang cập nhật...' : 'Refresh'}
                     </button>
+                    {linkType === 'channel' && channel?.analysis_scope?.mode !== 'FULL_CHANNEL_ANALYSIS' && (
+                        <button onClick={runFullChannelAnalysis} disabled={isRefreshing}
+                            className="flex items-center gap-1.5 px-3 py-2 text-xs bg-cyan-500/10 text-cyan-300 hover:text-white rounded-lg transition-all border border-cyan-500/20 disabled:opacity-50">
+                            <Activity size={12} />
+                            {isRefreshing ? 'Đang quét...' : 'Phân tích toàn kênh'}
+                        </button>
+                    )}
                     <button onClick={() => { setPhase('input'); setChannel(null); setAutoRefresh(true); }}
                         className="flex items-center gap-1.5 px-3 py-2 text-xs bg-gradient-to-r from-pink-500/10 to-purple-500/10 text-purple-300 hover:text-white rounded-lg transition-all border border-purple-500/20">
                         <Search size={12} /> Link khác
                     </button>
                 </div>
             </div>
+
+            {channel?.analysis_scope?.mode !== 'FULL_CHANNEL_ANALYSIS' && linkType === 'channel' && (
+                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-xs text-amber-100">
+                    Đang là Quick Scan: chỉ phân tích các video mới nhất để hiển thị nhanh. Để chọn video đáng chạy quảng bá dựa trên lịch sử kênh, hãy bấm <strong>Phân tích toàn kênh</strong>.
+                </div>
+            )}
+
+            {channel?.analysis_scope?.mode === 'FULL_CHANNEL_ANALYSIS' && (
+                <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 px-4 py-3 text-xs text-cyan-100">
+                    Full Channel Intelligence đã quét {channel.analysis_scope.video_count} video public lấy được từ kênh. Hệ thống dùng toàn bộ mẫu này để dựng baseline, tìm winner lịch sử và chọn objective theo views/followers/profile/sales.
+                    {!channel.analysis_scope.is_enough_for_scale && (
+                        <span className="ml-1 text-amber-200">SCALE vẫn bị khóa nếu chưa có paid history verified.</span>
+                    )}
+                </div>
+            )}
 
             {/* URL Display Bar */}
             <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
@@ -2207,6 +2582,73 @@ const TikTokPromote: React.FC = () => {
                             </div>
                         )}
 
+                        {/* ─── COMPETITIVE PROMOTION INTELLIGENCE ─── */}
+                        {(heroVideo.aiStrategy.competitive_promotion_intelligence || heroVideo.aiStrategy.strategy_match) && (
+                            <div className="mt-4 p-4 rounded-xl border border-cyan-500/10 bg-cyan-500/[0.04]">
+                                <h4 className="text-xs font-bold text-cyan-300 flex items-center gap-2 mb-3">
+                                    <Target size={13} className="text-cyan-400" />
+                                    Trí tuệ quảng bá theo đối thủ
+                                    <span className="text-[9px] ml-auto px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300">
+                                        {heroVideo.aiStrategy.promotion_decision?.niche_match_score ?? heroVideo.aiStrategy.strategy_match?.match_score ?? 0}% MATCH
+                                    </span>
+                                </h4>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+                                    {[
+                                        { label: 'Mục tiêu', value: heroVideo.aiStrategy.promotion_decision?.promotion_goal || heroVideo.aiStrategy.competitive_promotion_intelligence?.promotion_goal || heroVideo.aiStrategy.strategy_match?.recommended_objective || 'N/A', icon: Target },
+                                        { label: 'Mẫu thắng', value: heroVideo.aiStrategy.promotion_decision?.matched_niche_archetype || heroVideo.aiStrategy.strategy_match?.matched_archetype || 'N/A', icon: Crown },
+                                        { label: 'Bằng chứng', value: heroVideo.aiStrategy.promotion_decision?.source_reliability?.evidenceLevel || heroVideo.aiStrategy.source_reliability?.evidenceLevel || heroVideo.aiStrategy.competitive_promotion_intelligence?.evidenceLevel || 'ESTIMATED', icon: Users },
+                                    ].map(item => {
+                                        const Icon = item.icon;
+                                        return (
+                                            <div key={item.label} className="p-2.5 rounded-lg bg-white/[0.03] border border-white/5">
+                                                <p className="text-[8px] text-gray-500 font-bold uppercase flex items-center gap-1"><Icon size={10} /> {item.label}</p>
+                                                <p className="text-[11px] text-white font-bold mt-1 truncate">{item.value}</p>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {(heroVideo.aiStrategy.promotion_decision?.competitive_data_notice || heroVideo.aiStrategy.real_competitor_crawler?.message || heroVideo.aiStrategy.competitive_promotion_intelligence?.competitive_data_notice) && (
+                                    <div className="mb-3 flex items-start gap-2 p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/15">
+                                        <AlertCircle size={12} className="text-amber-400 shrink-0 mt-0.5" />
+                                        <p className="text-[10px] text-amber-100/80 leading-relaxed">
+                                            {heroVideo.aiStrategy.promotion_decision?.competitive_data_notice || heroVideo.aiStrategy.real_competitor_crawler?.message || heroVideo.aiStrategy.competitive_promotion_intelligence?.competitive_data_notice}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {(heroVideo.aiStrategy.promotion_decision?.competitor_insights || heroVideo.aiStrategy.strategy_match?.competitor_insights) && (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                                        {(heroVideo.aiStrategy.promotion_decision?.competitor_insights || heroVideo.aiStrategy.strategy_match?.competitor_insights || []).slice(0, 4).map((insight, i) => (
+                                            <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-cyan-500/5 border border-cyan-500/10">
+                                                <Sparkles size={10} className="text-cyan-400 shrink-0 mt-0.5" />
+                                                <p className="text-[10px] text-cyan-100/80 leading-relaxed">{insight}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {(heroVideo.aiStrategy.promotion_decision?.gap_analysis || heroVideo.aiStrategy.strategy_match?.gap_analysis) && (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                        {(heroVideo.aiStrategy.promotion_decision?.gap_analysis || heroVideo.aiStrategy.strategy_match?.gap_analysis || []).slice(0, 6).map(gap => (
+                                            <div key={gap.feature} className="p-2 rounded-lg bg-black/15 border border-white/5">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="text-[10px] text-gray-300 font-bold">{gap.feature}</span>
+                                                    <span className={`text-[8px] font-black ${
+                                                        gap.status === 'MATCH' ? 'text-green-400' :
+                                                        gap.status === 'PARTIAL' ? 'text-amber-400' : 'text-red-400'
+                                                    }`}>{gap.status === 'MATCH' ? 'KHỚP' : gap.status === 'PARTIAL' ? 'MỘT PHẦN' : 'LỆCH'}</span>
+                                                </div>
+                                                <p className="text-[9px] text-gray-500 mt-1 truncate">Kênh này: {gap.user}</p>
+                                                <p className="text-[9px] text-cyan-300/70 truncate">Top niche: {gap.top_niche}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* ─── VIRAL REASONING ENGINE ─── */}
                         {heroVideo.aiStrategy.viral_reasoning && heroVideo.aiStrategy.viral_reasoning.length > 0 && (
                             <div className="mt-4 p-4 rounded-xl border border-white/5" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.04), rgba(236,72,153,0.04))' }}>
@@ -2476,6 +2918,217 @@ const TikTokPromote: React.FC = () => {
                 </div>
             )}
 
+            {channel?.analysis_scope?.mode === 'FULL_CHANNEL_ANALYSIS' && topPaidMix.length > 0 && !heroVideo && (
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                    className="rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/[0.08] via-slate-950 to-purple-500/[0.06] p-5 shadow-2xl shadow-cyan-500/10">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between mb-5">
+                        <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">Full Channel Paid Mix</p>
+                            <h3 className="mt-1 text-xl font-black text-white">Top 6 video đáng chạy quảng cáo nhất</h3>
+                            <p className="mt-1 max-w-3xl text-xs text-gray-400">
+                                Chọn từ {channel.analysis_scope.video_count} video public đã crawl. Đây là recommendation dựa trên evidence, không phải cam kết follower/sales.
+                            </p>
+                        </div>
+                        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-xs text-amber-100">
+                            Public/benchmark data chỉ dùng để test nhỏ. SCALE chỉ mở khi có paid history verified.
+                        </div>
+                    </div>
+                    {(channel.winner_dna?.ready || channel.portfolio_optimization?.warnings?.length) && (
+                        <div className="mb-5 grid grid-cols-1 lg:grid-cols-2 gap-3">
+                            {channel.winner_dna?.ready && (
+                                <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/[0.06] p-3 text-xs text-emerald-50/85">
+                                    <p className="font-black text-emerald-300">Winner DNA của kênh</p>
+                                    <p className="mt-1">Xây từ {channel.winner_dna.sample_size} video thắng lịch sử. Hashtag thắng: {(channel.winner_dna.top_hashtags || []).slice(0, 5).join(', ') || 'chưa đủ dữ liệu'}.</p>
+                                </div>
+                            )}
+                            {channel.portfolio_optimization?.warnings?.length ? (
+                                <div className="rounded-2xl border border-amber-500/15 bg-amber-500/[0.06] p-3 text-xs text-amber-50/85">
+                                    <p className="font-black text-amber-300">Portfolio guardrail</p>
+                                    <p className="mt-1">{channel.portfolio_optimization.warnings[0]}</p>
+                                </div>
+                            ) : null}
+                        </div>
+                    )}
+                    {(channel.next_content_strategy?.ideas?.length || channel.evolutionary_memory?.ready || channel.creative_center_intelligence) && (
+                        <div className="mb-5 grid grid-cols-1 lg:grid-cols-3 gap-3">
+                            {channel.next_content_strategy?.ideas?.length ? (
+                                <div className="rounded-2xl border border-fuchsia-500/15 bg-fuchsia-500/[0.06] p-3 text-xs text-fuchsia-50/85 lg:col-span-2">
+                                    <p className="font-black text-fuchsia-300">AI đề xuất nên quay gì tiếp theo</p>
+                                    <div className="mt-2 grid gap-2 md:grid-cols-2">
+                                        {channel.next_content_strategy.ideas.slice(0, 2).map((idea) => (
+                                            <div key={idea.title} className="rounded-xl bg-black/20 p-2">
+                                                <p className="font-black text-white">{idea.title}</p>
+                                                <p className="mt-1 text-fuchsia-100/80">Hook: {idea.hook}</p>
+                                                <p className="mt-1 text-gray-500">{idea.why}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : null}
+                            <div className="rounded-2xl border border-blue-500/15 bg-blue-500/[0.06] p-3 text-xs text-blue-50/85">
+                                <p className="font-black text-blue-300">Evolution memory</p>
+                                <p className="mt-1">Pattern tăng: {channel.evolutionary_memory?.rising_patterns?.[0]?.pattern || 'chưa đủ dữ liệu'}</p>
+                                <p className="mt-1">Creative Center: {channel.creative_center_intelligence?.ready ? 'đã kết nối' : 'chưa kết nối'}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {topPaidMix.map(({ video, bucket, objective: mixObjective }, index) => {
+                            const decision = video.aiStrategy.promotion_decision;
+                            const budget = decision?.budgetPlan;
+                            const scores = decision?.scores;
+                            const objective = mixObjective || decision?.promotion_goal || decision?.objective || video.aiStrategy.strategy_match?.recommended_objective || null;
+                            const setup = getTikTokPromoteSetup(objective, decision?.action || 'TEST_SMALL');
+                            const reasonList = [
+                                ...(decision?.competitive_reason || []),
+                                ...(decision?.reasons || []),
+                            ].filter(Boolean).slice(0, 3);
+                            const competitorInsights = (decision?.competitor_insights || video.aiStrategy.strategy_match?.competitor_insights || []).slice(0, 2);
+                            const fixes = (decision?.fixes_before_promote || video.aiStrategy.strategy_match?.fixes_before_promote || decision?.requiredFixesBeforePromote || []).slice(0, 2);
+                            const stop = decision?.stopConditions?.[0];
+                            const evidence = decision?.source_reliability?.evidenceLevel || video.aiStrategy.source_reliability?.evidenceLevel || 'ESTIMATED';
+                            const maxDecisionConfidence = decision?.source_reliability?.max_decision_confidence || video.aiStrategy.source_reliability?.max_decision_confidence;
+                            const matchScore = decision?.niche_match_score || video.aiStrategy.strategy_match?.match_score || 0;
+                            const confidence = decision?.confidence || video.aiStrategy.analysis_confidence?.score || 0;
+                            const isEstimatedEvidence = evidence !== 'PAID_HISTORY_VERIFIED' && evidence !== 'PRIVATE_ANALYTICS';
+                            const retentionTruth = decision?.retention_truth;
+                            const timeline = retentionTruth?.timeline_diagnosis;
+                            const commentSignal = decision?.comment_psychology;
+                            const frameSignal = decision?.frame_visual_ai;
+                            const fatigue = decision?.creative_fatigue;
+                            const budgetAllocation = decision?.budget_allocation;
+                            const winnerMatch = decision?.winner_dna_match;
+                            return (
+                                <div key={video.id} className="rounded-2xl border border-white/10 bg-black/30 overflow-hidden">
+                                    <div className="relative aspect-video bg-white/5">
+                                        {video.thumbnail ? (
+                                            <img src={video.thumbnail} alt={video.title} className="h-full w-full object-cover opacity-80" />
+                                        ) : (
+                                            <div className="h-full w-full flex items-center justify-center text-gray-600"><Play size={34} /></div>
+                                        )}
+                                        <div className="absolute left-3 top-3 rounded-xl bg-cyan-500 px-2.5 py-1 text-xs font-black text-white">#{index + 1}</div>
+                                        <div className="absolute right-3 top-3 rounded-xl border border-white/15 bg-black/60 px-2.5 py-1 text-[10px] font-bold text-white">
+                                            {objectiveLabels[objective || ''] || objectiveBucketLabels[bucket] || bucket}
+                                        </div>
+                                    </div>
+                                    <div className="p-4 space-y-3">
+                                        <h4 className="line-clamp-2 text-sm font-black text-white">{video.title || video.id}</h4>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            <span className="rounded-full bg-cyan-500/15 px-2 py-1 text-[10px] font-bold text-cyan-200">Tương đồng niche ước lượng {matchScore}/100</span>
+                                            <span className="rounded-full bg-purple-500/15 px-2 py-1 text-[10px] font-bold text-purple-200">
+                                                Độ tin cậy quyết định {confidence}/100{maxDecisionConfidence ? ` · trần ${maxDecisionConfidence}` : ''}
+                                            </span>
+                                            <span className="rounded-full bg-amber-500/15 px-2 py-1 text-[10px] font-bold text-amber-200">{evidenceLabels[evidence] || evidence}</span>
+                                        </div>
+                                        {isEstimatedEvidence && (
+                                            <div className="rounded-xl border border-amber-500/15 bg-amber-500/[0.06] p-3 text-[11px] leading-relaxed text-amber-100/85">
+                                                Các chỉ số bên dưới là điểm khuynh hướng dựa trên public data + benchmark/heuristic, không phải dự báo chắc chắn về follower, sales hoặc ROAS. Chỉ nên dùng để test nhỏ.
+                                            </div>
+                                        )}
+                                        <div className="grid grid-cols-2 gap-2 text-xs">
+                                            <div className="rounded-xl bg-white/[0.04] p-3">
+                                                <p className="text-[9px] uppercase tracking-widest text-gray-500">Mục tiêu chạy</p>
+                                                <p className="mt-1 font-black text-cyan-200">{objectiveLabels[objective || ''] || objective || 'N/A'}</p>
+                                            </div>
+                                            <div className="rounded-xl bg-white/[0.04] p-3">
+                                                <p className="text-[9px] uppercase tracking-widest text-gray-500">Hành động</p>
+                                                <p className="mt-1 font-black text-white">{actionLabels[decision?.action || ''] || decision?.action || 'N/A'}</p>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-4 gap-1.5 text-center">
+                                            <div className="rounded-lg bg-white/[0.03] p-2">
+                                                <p className="text-[8px] text-gray-500">Tiềm năng xem</p>
+                                                <p className="font-bold text-blue-300">{scores?.viewBoost ?? 0}</p>
+                                            </div>
+                                            <div className="rounded-lg bg-white/[0.03] p-2">
+                                                <p className="text-[8px] text-gray-500">Sức kéo follower</p>
+                                                <p className="font-bold text-purple-300">{scores?.followerGrowth ?? 0}</p>
+                                            </div>
+                                            <div className="rounded-lg bg-white/[0.03] p-2">
+                                                <p className="text-[8px] text-gray-500">Sức kéo hồ sơ</p>
+                                                <p className="font-bold text-cyan-300">{scores?.profilePull ?? 0}</p>
+                                            </div>
+                                            <div className="rounded-lg bg-white/[0.03] p-2">
+                                                <p className="text-[8px] text-gray-500">Ý định mua</p>
+                                                <p className="font-bold text-green-300">{scores?.salesIntent ?? 0}</p>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 text-[10px]">
+                                            <div className="rounded-xl border border-blue-500/10 bg-blue-500/[0.04] p-2">
+                                                <p className="font-black uppercase tracking-widest text-blue-300">Retention</p>
+                                                <p className="mt-1 text-gray-300">3s: <b className="text-white">{retentionTruth?.retention_3s ?? 0}%</b> · {retentionTruth?.source || 'N/A'}</p>
+                                                {timeline?.biggest_drop && <p className="text-gray-500">Rơi mạnh: {timeline.biggest_drop.window} ({timeline.biggest_drop.drop_pct}%)</p>}
+                                                <RetentionSparkline points={timeline?.points} />
+                                            </div>
+                                            <div className="rounded-xl border border-green-500/10 bg-green-500/[0.04] p-2">
+                                                <p className="font-black uppercase tracking-widest text-green-300">Comment intent</p>
+                                                <p className="mt-1 text-gray-300">Mua: <b className="text-white">{commentSignal?.buying_intent_score ?? 0}/100</b></p>
+                                                <p className="text-gray-500">Emotion: {commentSignal?.emotion_intelligence?.dominant_emotion || 'unknown'}</p>
+                                            </div>
+                                            <div className="rounded-xl border border-purple-500/10 bg-purple-500/[0.04] p-2">
+                                                <p className="font-black uppercase tracking-widest text-purple-300">Visual AI</p>
+                                                <p className="mt-1 text-gray-300">Reveal: <b className="text-white">{frameSignal?.outfit_reveal_second ?? 'N/A'}s</b></p>
+                                                <p className="text-gray-500">{frameSignal?.source || 'N/A'}</p>
+                                            </div>
+                                            <div className="rounded-xl border border-amber-500/10 bg-amber-500/[0.04] p-2">
+                                                <p className="font-black uppercase tracking-widest text-amber-300">Budget AI</p>
+                                                <p className="mt-1 text-gray-300">{budgetAllocation?.mode || 'SAFE_TEST_ONLY'}</p>
+                                                <p className="text-gray-500">Fatigue: {fatigue?.risk || 'UNKNOWN'} · DNA {winnerMatch?.similarity_score ?? 0}</p>
+                                            </div>
+                                        </div>
+                                        {timeline?.diagnosis && (
+                                            <div className="rounded-xl border border-red-500/10 bg-red-500/[0.04] p-3">
+                                                <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-red-300">Failure prediction</p>
+                                                <p className="text-[11px] leading-relaxed text-red-100/80">• {timeline.diagnosis}</p>
+                                                <p className="text-[11px] leading-relaxed text-amber-100/80">• Sửa: {timeline.fix}</p>
+                                            </div>
+                                        )}
+                                        {reasonList.length > 0 && (
+                                            <div className="rounded-xl bg-white/[0.03] p-3">
+                                                <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-gray-500">Vì sao chọn video này</p>
+                                                <ul className="space-y-1">
+                                                    {reasonList.map((reason, reasonIndex) => (
+                                                        <li key={reasonIndex} className="text-[11px] leading-relaxed text-gray-300">• {reason}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                        {competitorInsights.length > 0 && (
+                                            <div className="rounded-xl border border-cyan-500/10 bg-cyan-500/[0.04] p-3">
+                                                <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-cyan-300">Insight benchmark/niche</p>
+                                                {competitorInsights.map((insight, insightIndex) => (
+                                                    <p key={insightIndex} className="text-[11px] leading-relaxed text-cyan-100/80">• {insight}</p>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {fixes.length > 0 && (
+                                            <div className="rounded-xl border border-amber-500/10 bg-amber-500/[0.05] p-3">
+                                                <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-amber-300">Sửa trước khi đổ tiền</p>
+                                                {fixes.map((fix, fixIndex) => (
+                                                    <p key={fixIndex} className="text-[11px] leading-relaxed text-amber-100/80">• {fix}</p>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <div className="rounded-xl border border-cyan-500/15 bg-cyan-500/[0.06] p-3 text-[11px] text-cyan-100">
+                                            <p><strong>Thiết lập TikTok:</strong> {setup?.tab || 'Promote'} → {setup?.option || objectiveLabels[objective || ''] || 'Objective AI đề xuất'}</p>
+                                            <p className="mt-1"><strong>Ngân sách:</strong> {fmtVND(budget?.dailyBudgetMin || 0)} - {fmtVND(budget?.dailyBudgetMax || 0)}/ngày · {budget?.durationDays || 1} ngày</p>
+                                            {stop && (
+                                                <p className="mt-1"><strong>Ngưỡng an toàn ban đầu:</strong> dừng/giảm nếu {metricLabels[stop.metric] || stop.metric} {stop.operator} {stop.value} sau {stop.windowHours}h → {stopActionLabels[stop.action] || stop.action}</p>
+                                            )}
+                                        </div>
+                                        <button onClick={() => handlePromote(video, objective)}
+                                            className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 py-2.5 text-xs font-black text-white transition hover:shadow-lg hover:shadow-cyan-500/20 active:scale-[0.98]">
+                                            Chạy test video này
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </motion.div>
+            )}
+
             {/* AI Banner */}
             {recommendedCount > 0 && !heroVideo && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
@@ -2516,86 +3169,90 @@ const TikTokPromote: React.FC = () => {
                 </motion.div>
             )}
 
-            {/* Tabs + Sort */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex bg-white/[0.03] rounded-xl p-1 border border-white/5">
-                    {([
-                        { key: 'all' as TabKey, label: 'Tất cả', count: sortedVideos.length },
-                        { key: 'recommended' as TabKey, label: 'AI Đề Xuất', count: recommendedCount },
-                        { key: 'history' as TabKey, label: 'Lịch sử', count: mockCampaignHistory.length },
-                    ]).map(tab => (
-                        <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-                            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${activeTab === tab.key ? 'bg-white/10 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}>
-                            {tab.label}
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${activeTab === tab.key ? 'bg-white/10' : 'bg-white/5'}`}>{tab.count}</span>
-                        </button>
-                    ))}
-                </div>
-                {activeTab !== 'history' && (
-                    <div className="flex items-center gap-1.5">
-                        <button onClick={() => { setIsCompareMode(!isCompareMode); setSelectedForCompare([]); }}
-                            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all ${isCompareMode ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-lg shadow-cyan-500/10' : 'bg-white/5 text-gray-400 hover:text-white border border-white/5'}`}>
-                            <Activity size={12} /> {isCompareMode ? 'Thoát so sánh' : 'so sánh Mode'}
-                        </button>
-                        <div className="w-[1px] h-4 bg-white/10 mx-1" />
-                        {([
-                            { key: 'aiScore' as const, icon: Sparkles, label: 'Điểm AI' },
-                            { key: 'views' as const, icon: Eye, label: 'Lượt xem' },
-                            { key: 'likes' as const, icon: Heart, label: 'Lượt thích' },
-                            { key: 'comments' as const, icon: MessageCircle, label: 'Bình luận' },
-                        ]).map(s => (
-                            <button key={s.key} onClick={() => setSortBy(s.key)}
-                                className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-all ${sortBy === s.key ? 'bg-purple-500/15 text-purple-300 border border-purple-500/20' : 'text-gray-500 hover:text-gray-300 border border-transparent'}`}>
-                                <s.icon size={11} /> {s.label}
-                            </button>
-                        ))}
+            {shouldShowVideoLibrary && (
+                <>
+                    {/* Tabs + Sort */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex bg-white/[0.03] rounded-xl p-1 border border-white/5">
+                            {([
+                                { key: 'all' as TabKey, label: 'Tất cả', count: sortedVideos.length },
+                                { key: 'recommended' as TabKey, label: 'AI Đề Xuất', count: recommendedCount },
+                                { key: 'history' as TabKey, label: 'Lịch sử', count: mockCampaignHistory.length },
+                            ]).map(tab => (
+                                <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+                                    className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${activeTab === tab.key ? 'bg-white/10 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}>
+                                    {tab.label}
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${activeTab === tab.key ? 'bg-white/10' : 'bg-white/5'}`}>{tab.count}</span>
+                                </button>
+                            ))}
+                        </div>
+                        {activeTab !== 'history' && (
+                            <div className="flex items-center gap-1.5">
+                                <button onClick={() => { setIsCompareMode(!isCompareMode); setSelectedForCompare([]); }}
+                                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all ${isCompareMode ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-lg shadow-cyan-500/10' : 'bg-white/5 text-gray-400 hover:text-white border border-white/5'}`}>
+                                    <Activity size={12} /> {isCompareMode ? 'Thoát so sánh' : 'so sánh Mode'}
+                                </button>
+                                <div className="w-[1px] h-4 bg-white/10 mx-1" />
+                                {([
+                                    { key: 'aiScore' as const, icon: Sparkles, label: 'Điểm AI' },
+                                    { key: 'views' as const, icon: Eye, label: 'Lượt xem' },
+                                    { key: 'likes' as const, icon: Heart, label: 'Lượt thích' },
+                                    { key: 'comments' as const, icon: MessageCircle, label: 'Bình luận' },
+                                ]).map(s => (
+                                    <button key={s.key} onClick={() => setSortBy(s.key)}
+                                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-all ${sortBy === s.key ? 'bg-purple-500/15 text-purple-300 border border-purple-500/20' : 'text-gray-500 hover:text-gray-300 border border-transparent'}`}>
+                                        <s.icon size={11} /> {s.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                )}
-            </div>
 
-            {/* History */}
-            {activeTab === 'history' && (
-                <div className="space-y-3">
-                    {mockCampaignHistory.map((c, i) => (
-                        <motion.div key={c.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                            className="glass-card p-4 flex flex-col sm:flex-row sm:items-center gap-3">
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold truncate">{c.videoTitle}</p>
-                                <p className="text-[11px] text-gray-500 mt-0.5">{c.goal} • {c.date}</p>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold ${c.status === 'running' ? 'bg-blue-500/15 text-blue-400 border border-blue-500/20' : c.status === 'completed' ? 'bg-green-500/15 text-green-400 border border-green-500/20' : 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/20'}`}>
-                                    {c.status === 'running' ? '🔵 Đang chạy' : c.status === 'completed' ? '✅ Hoàn tất' : '⏸️ Tạm dừng'}
-                                </span>
-                                <div className="text-right">
-                                    <p className="text-xs font-bold">{fmtVND(c.spent)}</p>
-                                    <p className="text-[10px] text-green-400">{c.result}</p>
-                                </div>
-                            </div>
-                        </motion.div>
-                    ))}
-                </div>
-            )}
+                    {/* History */}
+                    {activeTab === 'history' && (
+                        <div className="space-y-3">
+                            {mockCampaignHistory.map((c, i) => (
+                                <motion.div key={c.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                                    className="glass-card p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold truncate">{c.videoTitle}</p>
+                                        <p className="text-[11px] text-gray-500 mt-0.5">{c.goal} • {c.date}</p>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold ${c.status === 'running' ? 'bg-blue-500/15 text-blue-400 border border-blue-500/20' : c.status === 'completed' ? 'bg-green-500/15 text-green-400 border border-green-500/20' : 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/20'}`}>
+                                            {c.status === 'running' ? '🔵 Đang chạy' : c.status === 'completed' ? '✅ Hoàn tất' : '⏸️ Tạm dừng'}
+                                        </span>
+                                        <div className="text-right">
+                                            <p className="text-xs font-bold">{fmtVND(c.spent)}</p>
+                                            <p className="text-[10px] text-green-400">{c.result}</p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    )}
 
-            {/* Video Grid — uses extracted memoized VideoCard */}
-            {activeTab !== 'history' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    <AnimatePresence mode="popLayout">
-                        {displayVideos.map((video, i) => (
-                            <VideoCard
-                                key={video.id}
-                                video={video}
-                                index={i}
-                                isExpanded={expandedVideo === video.id}
-                                isCompareMode={isCompareMode}
-                                isSelectedForCompare={selectedForCompare.includes(video.id)}
-                                onToggleExpand={handleToggleExpand}
-                                onPromote={handlePromote}
-                                onToggleCompare={handleToggleCompare}
-                            />
-                        ))}
-                    </AnimatePresence>
-                </div>
+                    {/* Video Grid — uses extracted memoized VideoCard */}
+                    {activeTab !== 'history' && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                            <AnimatePresence mode="popLayout">
+                                {displayVideos.map((video, i) => (
+                                    <VideoCard
+                                        key={video.id}
+                                        video={video}
+                                        index={i}
+                                        isExpanded={expandedVideo === video.id}
+                                        isCompareMode={isCompareMode}
+                                        isSelectedForCompare={selectedForCompare.includes(video.id)}
+                                        onToggleExpand={handleToggleExpand}
+                                        onPromote={handlePromote}
+                                        onToggleCompare={handleToggleCompare}
+                                    />
+                                ))}
+                            </AnimatePresence>
+                        </div>
+                    )}
+                </>
             )}
 
             {/* ═══ PROMOTE MODAL ═══ */}
@@ -2661,6 +3318,24 @@ const TikTokPromote: React.FC = () => {
                                                 <span className="text-[9px] text-gray-500 ml-auto">Điểm AI {selectedVideo.aiStrategy.overall_score}</span>
                                             </div>
                                             <p className="text-[10px] text-gray-400 leading-relaxed">{selectedVideo.aiStrategy.final_verdict.slice(0, 200)}...</p>
+                                        </div>
+
+                                        <div className="p-3 rounded-xl space-y-2" style={{ background: 'rgba(6,182,212,0.05)', border: '1px solid rgba(6,182,212,0.15)' }}>
+                                            <div className="flex items-center gap-2">
+                                                <ExternalLink size={12} className="text-cyan-300" />
+                                                <span className="text-[11px] font-bold text-cyan-200">Mở đúng thiết lập TikTok Promote</span>
+                                            </div>
+                                            <p className="text-[10px] text-cyan-50/85 leading-relaxed">
+                                                Trên TikTok chọn: <strong>{selectedTikTokSetup.tab}</strong> → <strong>{selectedTikTokSetup.option}</strong> → <strong>{selectedTikTokSetup.package}</strong>.
+                                            </p>
+                                            <p className="text-[10px] text-gray-500">{selectedTikTokSetup.instruction}</p>
+                                            <button
+                                                type="button"
+                                                onClick={() => window.open(getTikTokPromoteUrl(selectedVideo), '_blank', 'noopener,noreferrer')}
+                                                className="w-full rounded-lg border border-cyan-400/20 bg-cyan-400/10 px-3 py-2 text-[11px] font-black text-cyan-100 transition hover:bg-cyan-400/15"
+                                            >
+                                                Mở TikTok Promote đúng video
+                                            </button>
                                         </div>
 
                                         {/* Goals */}

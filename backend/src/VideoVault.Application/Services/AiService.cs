@@ -12,7 +12,7 @@ namespace VideoVault.Application.Services
     {
         Task<string> RewriteTextAsync(string text, string tone, string targetLanguage = "vi");
         Task<string> TranslateAsync(string text, string targetLanguage);
-        Task<string> GenerateCaptionAndHashtagsAsync(string title, string description, string[] tags);
+        Task<string> GenerateCaptionAndHashtagsAsync(string title, string description, string[] tags, string sourcePlatform = "unknown", string rawMetadataJson = "");
     }
 
     public class AiService : IAiService
@@ -51,59 +51,111 @@ Quy tắc:
             return await CallGeminiApiAsync(systemPrompt, userPrompt);
         }
 
-        public async Task<string> GenerateCaptionAndHashtagsAsync(string title, string description, string[] tags)
+        public async Task<string> GenerateCaptionAndHashtagsAsync(string title, string description, string[] tags, string sourcePlatform = "unknown", string rawMetadataJson = "")
         {
             string systemPrompt = """
-Bạn là lớp phân tích tâm lý, giải thích và copywriting của hệ thống TikTok Growth Intelligence cấp doanh nghiệp.
-Bạn vận hành như một chuyên gia tâm lý hành vi và chuyên gia nội dung ngắn.
+You are Universal TikTok Vietnam Growth AI.
 
-========================================
-ĐỊNH NGHĨA VAI TRÒ
-========================
-Bạn chỉ là một phần của hệ thống Hybrid ML lớn hơn.
-Bạn KHÔNG được tự tạo điểm số cuối, xác suất viral hoặc ROI. Các chỉ số đó do model/rule engine xử lý.
-Nhiệm vụ duy nhất của bạn:
-1. Giải thích: nói rõ vì sao video có thể hiệu quả theo góc nhìn tâm lý người xem.
-2. Tối ưu hook: viết lại hook để tăng tò mò và giữ chân người xem.
-3. Chiến lược caption: viết caption tiếng Việt tự nhiên, có khả năng chuyển đổi cao.
+The imported content may come from Xiaohongshu, Douyin, TikTok, Instagram Reels, YouTube Shorts, Facebook Reels or other platforms.
 
-========================================
-1. PHÂN TÍCH TÂM LÝ
-======================
-Phân tích transcript, tiêu đề và ngách nội dung để xác định:
-- Nhịp dopamine: nhanh, chậm hay có phần thưởng cảm xúc rõ.
-- Vòng tò mò: nội dung có khiến người xem muốn xem tiếp không.
-- Điểm đồng cảm: nội dung có làm người xem thấy mình được thấu hiểu không.
+Your job:
+1. Detect the content type.
+2. Detect the niche/category.
+3. Use original caption/title/hashtags first.
+4. If caption is missing or weak, infer from top comments when comments are provided.
+5. If comments are unavailable, infer from visual/audio content only when those signals are provided. If they are not provided, mark the signal as false.
+6. Prioritize fashion/e-commerce analysis when fashion elements are detected.
+7. Always rewrite output for TikTok Vietnam audience and TikTok Shop conversion when relevant.
 
-========================================
-2. GIẢI THÍCH LÝ DO
-=============================
-Giải thích bằng tiếng Việt rõ ràng, dễ hiểu.
-Dùng câu ngắn, sắc, có tính hành động để mô tả sức mạnh tâm lý của nội dung.
+Important flow:
+Import video/link from any platform
+-> Read original metadata: caption, title, description, hashtags
+-> If caption is missing: use top comments if available
+-> If still missing: use vision/audio inference if available
+-> Detect niche
+-> If fashion: use Fashion Growth AI priority
+-> If another niche: use that niche's framework
+-> Rewrite for TikTok Vietnam and the channel/shop objective
 
-========================================
-3. CHIẾN LƯỢC CAPTION VÀ HOOK
-==========================
-* Viết 1 caption TikTok tiếng Việt thật ngắn, tự nhiên, đúng ngữ cảnh.
-* Viết 1 hook mạnh cho video.
-* Chỉ chọn hashtag thật, đúng ngách. Không spam hashtag rỗng như #foryoupage hoặc #viral nếu không phù hợp.
+Niche frameworks:
+- fashion: outfit, form, color, style, vibe, mix-and-match, TikTok Shop CTA.
+- beauty: skin, makeup, routine, before-after, product trust.
+- food: craving, location, price, experience.
+- tech: pain point, features, comparison, use case.
+- education: learning problem, insight, checklist.
+- lifestyle: aspiration, routine, emotion, relatable moment.
+- meme/entertainment: punchline, comment bait, shareability.
 
-========================================
-ĐỊNH DẠNG TRẢ VỀ
-=============
-Chỉ trả về JSON đúng cấu trúc sau:
+Rules:
+- If detectedNiche = fashion, caption must sound like a Vietnamese fashion creator. Focus on outfit, form dáng, màu sắc, style, vibe, phối đồ, TikTok Shop.
+- If detectedNiche != fashion, do not force outfit analysis. Use the niche-specific framework.
+- Do not spam #fyp, #viral, #foryou, #foryoupage.
+- Hashtags only route the initial audience. Prioritize hook, psychology, retention, CTA and audience match first.
+- Return JSON only. No markdown fences.
+
+Required JSON schema:
 {
-  "psychological_analysis": "Nhịp dựng nhanh, tạo tò mò tốt trong 3 giây đầu.",
-  "explainability_reasons": ["Hook hình ảnh rõ", "Cảm xúc dễ đồng cảm"],
-  "optimized_hook": "Biết sự thật này xong bạn sẽ không bao giờ làm cách cũ nữa 😳",
-  "optimized_caption": "Đỉnh thực sự luôn á mọi người 😭",
-  "hashtags": ["#meovat", "#xuhuong", "#learnontiktok"]
+  "sourcePlatform": "xiaohongshu | douyin | tiktok | instagram | youtube | facebook | unknown",
+  "contentType": "image | video | carousel | livestream_clip | product_review | talking_head | vlog | meme | tutorial | unknown",
+  "detectedNiche": "fashion | beauty | food | lifestyle | tech | education | fitness | travel | entertainment | pet | gaming | finance | other",
+  "nicheConfidence": 0.86,
+  "inputSignals": {
+    "usedOriginalCaption": true,
+    "usedComments": false,
+    "usedVisualInference": false,
+    "usedAudioInference": false
+  },
+  "audience": "Nữ 18-24 / Clean Girl / TikTok Shop",
+  "hookScore": 92,
+  "trigger": "Effortless beauty aspiration",
+  "viralPotential": "High",
+  "hook": "Đổi đúng 1 món mà outfit nhìn khác hẳn...",
+  "caption": "Mấy bà mặc tone này nhìn sang hơn hẳn luôn á 😭",
+  "cta": "Có gắn link outfit ở giỏ hàng nha ✨",
+  "hashtags": ["#outfittiktok", "#vayxinh", "#reviewdo"],
+  "psychological_analysis": "Explain why this can retain TikTok Vietnam viewers. Mention what signal was used.",
+  "smart_hashtags": [
+    {
+      "tag": "#outfittiktok",
+      "posts": "12M",
+      "likes": "4.1B",
+      "engagement": "high",
+      "saturation": "medium",
+      "growth": "rising",
+      "layer": "HIGH DISCOVERY",
+      "score": 88
+    }
+  ],
+  "hooks_ab": ["5 short hook variants"],
+  "captions_ab": ["5 TikTok Vietnam caption variants"],
+  "hashtag_sets_ab": [["#set1"], ["#set2"], ["#set3"], ["#set4"], ["#set5"]],
+  "memory_signals": {
+    "hook": "What hook pattern should be tested next",
+    "retention": "Retention hypothesis",
+    "saves": "Save hypothesis",
+    "shares": "Share hypothesis",
+    "ctr": "CTA/CTR hypothesis"
+  }
 }
 """;
 
-            string userPrompt = string.IsNullOrWhiteSpace(title) && string.IsNullOrWhiteSpace(description) && tags.Length == 0
-                ? "Video chưa có thông tin chữ. Hãy xem đây là một video lifestyle/giải trí theo xu hướng và tạo caption, hook, hashtag tiếng Việt phù hợp nhất. Không hỏi thêm thông tin."
-                : $"Tiêu đề: {title}\nMô tả: {description}\nHashtag hiện có: {string.Join(", ", tags)}";
+            var hasOriginalCaption = !string.IsNullOrWhiteSpace(title) || !string.IsNullOrWhiteSpace(description) || tags.Length > 0;
+            string userPrompt = $"""
+Source platform from extractor: {sourcePlatform}
+Original title: {title}
+Original caption/description: {description}
+Original hashtags: {string.Join(", ", tags)}
+Top comments: unavailable
+Visual inference: unavailable
+Audio inference: unavailable
+Raw metadata JSON: {rawMetadataJson}
+
+Set inputSignals.usedOriginalCaption = {hasOriginalCaption.ToString().ToLowerInvariant()}.
+Set inputSignals.usedComments = false unless top comments are present.
+Set inputSignals.usedVisualInference = false unless visual inference is present.
+Set inputSignals.usedAudioInference = false unless audio inference is present.
+If metadata is weak, infer cautiously from title/description/hashtags and lower nicheConfidence.
+""";
 
             return await CallGeminiApiAsync(systemPrompt, userPrompt);
         }
@@ -150,13 +202,13 @@ Chỉ trả về JSON đúng cấu trúc sau:
                     temperature = 0.7,
                     topK = 40,
                     topP = 0.95,
-                    maxOutputTokens = 2048,
+                    maxOutputTokens = 8192,
                 }
             };
 
             var jsonPayload = JsonSerializer.Serialize(payload);
             var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            Exception lastException = null;
+            Exception? lastException = null;
 
             foreach (var model in models)
             {
