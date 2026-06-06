@@ -102,12 +102,12 @@ const MainLayout: React.FC = () => {
             isAdminSection: false,
             items: [
                 { id: 'dl-history', icon: Download, label: 'Tải theo URL', path: '/downloads' },
-                { id: 'dl-account', icon: Users, label: 'Tải theo Account', path: '/downloads/account' },
-                { id: 'dl-hashtag', icon: Hash, label: 'Tải theo Hashtag', path: '/downloads/hashtag' },
+                { id: 'dl-account', icon: Users, label: 'Tải theo tài khoản', path: '/downloads/account' },
+                { id: 'dl-hashtag', icon: Hash, label: 'Tải theo hashtag', path: '/downloads/hashtag' },
             ]
         },
         {
-            title: 'AI Automation',
+            title: 'Tự động hóa AI',
             isAdminSection: false,
             items: [
                 { id: 'auto-pipeline', icon: Workflow, label: 'Auto Pipeline', path: '/automation/pipeline' },
@@ -117,7 +117,7 @@ const MainLayout: React.FC = () => {
             ]
         },
         {
-            title: 'Tăng Trưởng & Ads',
+            title: 'Tăng trưởng & Ads',
             isAdminSection: false,
             items: [
                 { id: 'growth-promote', icon: Megaphone, label: 'TikTok Promote (AI)', path: '/growth/promote' },
@@ -132,7 +132,7 @@ const MainLayout: React.FC = () => {
             ]
         },
         {
-            title: 'Phân tích & Affiliates',
+            title: 'Phân tích & Affiliate',
             isAdminSection: false,
             items: [
                 { id: 'an-viral', icon: LineChart, label: 'Viral Analytics', path: '/analytics/viral' },
@@ -245,7 +245,7 @@ const MainLayout: React.FC = () => {
                                 {user?.fullName || user?.username || 'Guest'}
                             </p>
                             <p className={`text-[10px] uppercase font-black tracking-widest mt-0.5 ${isAdmin ? 'text-purple-400' : 'text-gray-500'}`}>
-                                {isAdmin ? '👑 Admin' : 'Free Plan'}
+                                {isAdmin ? 'Admin' : 'Gói miễn phí'}
                             </p>
                         </div>
                         <button onClick={logout} className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Đăng xuất">

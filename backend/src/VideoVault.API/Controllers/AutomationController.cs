@@ -22,9 +22,21 @@ namespace VideoVault.API.Controllers
             _logger = logger;
         }
 
-        [HttpPost("run")]
-        public async Task<IActionResult> RunPipeline([FromForm] IFormFile file, [FromForm] string targetLanguage = "vi", [FromForm] string customPrompt = "")
+        public class RunPipelineFormRequest
         {
+            public IFormFile File { get; set; } = default!;
+            public string TargetLanguage { get; set; } = "vi";
+            public string CustomPrompt { get; set; } = string.Empty;
+        }
+
+        [HttpPost("run-pipeline")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> RunPipeline([FromForm] RunPipelineFormRequest form)
+        {
+            var file = form.File;
+            var targetLanguage = form.TargetLanguage;
+            var customPrompt = form.CustomPrompt;
+
             if (file == null || file.Length == 0)
                 return BadRequest("No video file uploaded.");
 

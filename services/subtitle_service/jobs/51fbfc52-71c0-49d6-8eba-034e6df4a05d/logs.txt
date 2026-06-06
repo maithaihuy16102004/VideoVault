@@ -1,0 +1,9 @@
+2026-06-03T09:43:49.352441+00:00 [STT_JOB] job_id=51fbfc52-71c0-49d6-8eba-034e6df4a05d
+2026-06-03T09:43:49.353941+00:00 [STT_JOB] input_path=D:\Work\services\subtitle_service\jobs\51fbfc52-71c0-49d6-8eba-034e6df4a05d\input.mp4
+2026-06-03T09:43:49.354694+00:00 [STT_JOB] filename=芭蕾美学：甜美精致，轻盈灵动，是优雅与力量的诗意平衡。#时尚 #芭蕾风 #balletcore #穿搭 #hello时尚季_465a5741 (1).mp4
+2026-06-03T09:43:49.355193+00:00 [STT_JOB] size=19463820
+2026-06-03T09:43:49.355700+00:00 [STT_JOB] sha256=2cb87dd4449ea7603a6e66c75a3c233d48e9bc3b0c6ced5fd4760833f197dd1d
+2026-06-03T09:43:49.927163+00:00 [STT_JOB] video_duration=125.130
+2026-06-03T09:43:49.928246+00:00 [STT_JOB] audio_duration=125.130
+2026-06-03T09:43:49.929752+00:00 [STT_JOB] audio_extract_time=0.57s
+2026-06-03T09:48:55.703598+00:00 [STT_JOB] total_time=306.35s

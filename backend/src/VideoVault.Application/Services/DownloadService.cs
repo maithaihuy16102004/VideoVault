@@ -80,6 +80,7 @@ public class DownloadService
     public async Task<List<DownloadJobDto>> GetHistoryAsync(Guid userId, int page = 1, int pageSize = 20)
     {
         var jobs = await _db.DownloadJobs
+            .AsNoTracking()
             .Where(j => j.UserId == userId)
             .OrderByDescending(j => j.CreatedAt)
             .Skip((page - 1) * pageSize)

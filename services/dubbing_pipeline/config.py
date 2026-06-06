@@ -1,5 +1,8 @@
 import os
+from pathlib import Path
 from pydantic_settings import BaseSettings
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 class Settings(BaseSettings):
     # API Keys
@@ -10,7 +13,7 @@ class Settings(BaseSettings):
     PORT: int = 5060
     
     # Paths
-    STORAGE_PATH: str = os.getenv("STORAGE_PATH", "../../storage")
+    STORAGE_PATH: str = os.getenv("STORAGE_PATH", str(PROJECT_ROOT / "storage"))
     DUBBING_STORAGE_PATH: str = os.path.join(STORAGE_PATH, "dubbing")
     
     # Model Settings

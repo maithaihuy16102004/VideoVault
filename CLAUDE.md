@@ -3,7 +3,13 @@
 > Hệ thống web tải video chất lượng gốc từ Douyin, TikTok, Xiaohongshu, Bilibili, YouTube...  
 > Kiến trúc SaaS với phân quyền người dùng, gói dịch vụ, và bảng quản trị admin.
 
---- 
+---
+
+## Development Rules
+
+- After finishing a module or contract fix, run the relevant build and runtime checks immediately.
+- Do not add new features while an automation flow is failing end-to-end; fix contract, runtime, and auth blockers first.
+- For automation modules, test in this order: STT, Voice, Translate, Python pipeline 5060 health/start/status, backend dubbing API, then `/automation/pipeline`.
 
 ## 1. TỔNG QUAN HỆ THỐNG
 

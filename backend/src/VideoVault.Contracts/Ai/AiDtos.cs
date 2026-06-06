@@ -3,8 +3,9 @@ namespace VideoVault.Contracts.Ai
     public class RewriteRequest
     {
         public string Text { get; set; } = string.Empty;
-        public string Tone { get; set; } = "viral"; // viral, emotional, sales, genz, professional
+        public string Tone { get; set; } = "viral"; // viral, emotional, sales, genz, professional, custom
         public string TargetLanguage { get; set; } = "vi";
+        public string CustomPrompt { get; set; } = string.Empty;
     }
 
     public class RewriteResponse

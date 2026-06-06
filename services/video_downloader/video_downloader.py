@@ -7,6 +7,15 @@ import sys
 import requests
 import urllib.parse
 import uuid
+import sys
+import os
+
+# Add parent directory (services/) to path for cross-package imports
+_SERVICES_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _SERVICES_DIR not in sys.path:
+    sys.path.insert(0, _SERVICES_DIR)
+
+from scraper.selenium_pool import driver_pool
 
 # Fix encoding cho Windows terminal
 if sys.stdout.encoding != 'utf-8':
@@ -217,12 +226,10 @@ def download_with_selenium(url, platform='douyin', max_quality='Original', downl
     print(f"🌐 Đang mở trình duyệt để lấy link gốc {name}...")
     
     driver = None
-    for setup_func in [_setup_edge, _setup_chrome]:
-        try:
-            driver = setup_func(enable_logging=True)
-            break
-        except:
-            continue
+    try:
+        driver = driver_pool.get_driver(enable_logging=True)
+    except Exception as e:
+        print(f"⚠️ Không thể lấy trình duyệt từ pool: {e}")
     
     if not driver:
         print("❌ Không tìm thấy trình duyệt (Edge/Chrome).")
@@ -320,7 +327,7 @@ def download_with_selenium(url, platform='douyin', max_quality='Original', downl
                   'https://www.xiaohongshu.com/' if platform == 'xhs' else \
                   'https://www.douyin.com/'
         
-        driver.quit()
+        driver_pool.release_driver(driver)
         driver = None
 
         # THỬ TẢI ẢNH (NẾU DOWNLOAD_TYPE = auto, images, both)
@@ -383,7 +390,7 @@ def download_with_selenium(url, platform='douyin', max_quality='Original', downl
         print("❌ Không thể tải video này bằng trình duyệt.")
         return False
     finally:
-        if driver: driver.quit()
+        if driver: driver_pool.release_driver(driver)
 
 def _collect_all_quality_urls(video_data, max_height=99999):
     """
@@ -652,12 +659,10 @@ def scrape_account_videos(username, platform='douyin', limit=50):
     Video da duoc sap xep tu moi nhat -> cu nhat (theo thu tu platform hien thi).
     """
     driver = None
-    for setup_func in [_setup_edge, _setup_chrome]:
-        try:
-            driver = setup_func(enable_logging=False)
-            break
-        except:
-            continue
+    try:
+        driver = driver_pool.get_driver(enable_logging=False)
+    except Exception as e:
+        pass
 
     if not driver:
         return {"error": "Khong tim thay trinh duyet (Edge/Chrome)."}
@@ -725,7 +730,7 @@ def scrape_account_videos(username, platform='douyin', limit=50):
                 "platform": platform
             })
 
-        driver.quit()
+        driver_pool.release_driver(driver)
         driver = None
         videos_raw = videos_raw[:limit]
 
@@ -742,7 +747,7 @@ def scrape_account_videos(username, platform='douyin', limit=50):
         return {"error": str(e), "username": username, "videos": []}
     finally:
         if driver:
-            try: driver.quit()
+            try: driver_pool.release_driver(driver)
             except: pass
 
 
@@ -753,12 +758,10 @@ def scrape_hashtag_videos(hashtag, platform='douyin', limit=50):
     Tra ve dict: {hashtag, viewCount, videoCount, videos: [...]}
     """
     driver = None
-    for setup_func in [_setup_edge, _setup_chrome]:
-        try:
-            driver = setup_func(enable_logging=False)
-            break
-        except:
-            continue
+    try:
+        driver = driver_pool.get_driver(enable_logging=False)
+    except Exception as e:
+        pass
 
     if not driver:
         return {"error": "Khong tim thay trinh duyet (Edge/Chrome)."}
@@ -778,7 +781,7 @@ def scrape_hashtag_videos(hashtag, platform='douyin', limit=50):
         # Check for TikTok error page (headless blocks hashtag/search pages)
         body_text = driver.execute_script("return document.body.innerText.substring(0, 500);") or ''
         if 'Something went wrong' in body_text or 'verify' in body_text.lower():
-            driver.quit()
+            driver_pool.release_driver(driver)
             driver = None
             return {
                 "hashtag": clean_tag,
@@ -827,7 +830,7 @@ def scrape_hashtag_videos(hashtag, platform='douyin', limit=50):
                 "platform": platform
             })
 
-        driver.quit()
+        driver_pool.release_driver(driver)
         driver = None
         videos_raw = videos_raw[:limit]
 

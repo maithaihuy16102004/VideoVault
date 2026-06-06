@@ -13,6 +13,7 @@ public class PlanService
     public async Task<List<PlanDto>> GetAllPlansAsync()
     {
         var plans = await _db.SubscriptionPlans
+            .AsNoTracking()
             .Where(p => p.IsActive)
             .OrderBy(p => p.SortOrder)
             .ToListAsync();

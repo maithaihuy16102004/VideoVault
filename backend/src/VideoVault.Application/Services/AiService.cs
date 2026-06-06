@@ -10,7 +10,7 @@ namespace VideoVault.Application.Services
 {
     public interface IAiService
     {
-        Task<string> RewriteTextAsync(string text, string tone, string targetLanguage = "vi");
+        Task<string> RewriteTextAsync(string text, string tone, string targetLanguage = "vi", string customPrompt = "");
         Task<string> TranslateAsync(string text, string targetLanguage);
         Task<string> GenerateCaptionAndHashtagsAsync(string title, string description, string[] tags, string sourcePlatform = "unknown", string rawMetadataJson = "");
     }
@@ -28,9 +28,9 @@ namespace VideoVault.Application.Services
             _logger = logger;
         }
 
-        public async Task<string> RewriteTextAsync(string text, string tone, string targetLanguage = "vi")
+        public async Task<string> RewriteTextAsync(string text, string tone, string targetLanguage = "vi", string customPrompt = "")
         {
-            string systemPrompt = GetPromptByTone(tone, targetLanguage);
+            string systemPrompt = GetPromptByTone(tone, targetLanguage, customPrompt);
             string userPrompt = $"Nội dung cần viết lại:\n{text}";
 
             return await CallGeminiApiAsync(systemPrompt, userPrompt);
@@ -160,19 +160,37 @@ If metadata is weak, infer cautiously from title/description/hashtags and lower 
             return await CallGeminiApiAsync(systemPrompt, userPrompt);
         }
 
-        private string GetPromptByTone(string tone, string targetLanguage)
+        private string GetPromptByTone(string tone, string targetLanguage, string customPrompt = "")
         {
             string lang = targetLanguage.ToLower() == "vi" ? "tiếng Việt" : targetLanguage;
             
-            return tone.ToLower() switch
+            // Common subtitle constraints appended to every tone prompt
+            string subtitleRules = $@"
+
+Quy tắc bắt buộc khi dịch/viết lại phụ đề:
+1. Input là danh sách các dòng dạng [số] nội dung. Trả về ĐÚNG SỐ LƯỢNG dòng như input, mỗi dòng ra tương ứng 1 dòng vào.
+2. Mỗi dòng output bắt đầu bằng [số] tương ứng, theo sau là nội dung đã dịch.
+3. Câu dịch phải NGẮN GỌN, đủ để giọng đọc AI (Text-to-Speech) đọc hết trong khoảng thời gian phụ đề gốc.
+4. TUYỆT ĐỐI không thêm emoji (vì TTS sẽ đọc emoji ra chữ), không thêm dấu ba chấm hoặc dấu phẩy thừa.
+5. Không gộp, không tách, không thêm, không bỏ dòng nào. Giữ nguyên số lượng dòng.
+6. Chỉ trả về các dòng đã dịch, không giải thích thêm.";
+
+            if (tone.ToLower() == "custom" && !string.IsNullOrWhiteSpace(customPrompt))
             {
-                "viral" => $"Hãy viết lại nội dung sau bằng {lang} theo phong cách TikTok/Douyin dễ viral: hook mạnh, câu ngắn, cuốn, có emoji vừa đủ. Chỉ trả về nội dung đã viết lại.",
-                "emotional" => $"Hãy viết lại nội dung sau bằng {lang} theo hướng giàu cảm xúc, dễ đồng cảm và chạm đúng tâm lý người đọc. Chỉ trả về nội dung đã viết lại.",
-                "sales" => $"Hãy viết lại nội dung sau bằng {lang} theo hướng thuyết phục và tối ưu chuyển đổi: nêu rõ lợi ích, tạo lý do hành động và có CTA mạnh. Chỉ trả về nội dung đã viết lại.",
-                "genz" => $"Hãy viết lại nội dung sau bằng {lang} theo giọng Gen Z tự nhiên, vui, bắt trend nhưng không lố. Có thể dùng emoji vừa phải. Chỉ trả về nội dung đã viết lại.",
-                "professional" => $"Hãy viết lại nội dung sau bằng {lang} theo giọng chuyên nghiệp, rõ ràng, có thẩm quyền và phù hợp ngữ cảnh kinh doanh. Chỉ trả về nội dung đã viết lại.",
-                _ => $"Hãy viết lại nội dung sau bằng {lang} sao cho rõ ràng, tự nhiên và chuyên nghiệp. Chỉ trả về nội dung đã viết lại."
+                return $"{customPrompt}\n\nLưu ý: Ngôn ngữ đích là {lang}. Chỉ trả về nội dung đã viết lại, không giải thích.{subtitleRules}";
+            }
+
+            string toneInstruction = tone.ToLower() switch
+            {
+                "viral" => $"Hãy viết lại nội dung sau bằng {lang} theo phong cách TikTok/Douyin dễ viral: hook mạnh, câu ngắn, cuốn hút. Giữ ý nghĩa gốc nhưng làm cho cuốn hơn.",
+                "emotional" => $"Hãy viết lại nội dung sau bằng {lang} theo hướng giàu cảm xúc, dễ đồng cảm và chạm đúng tâm lý người đọc.",
+                "sales" => $"Hãy viết lại nội dung sau bằng {lang} theo hướng thuyết phục và tối ưu chuyển đổi: nêu rõ lợi ích, tạo lý do hành động.",
+                "genz" => $"Hãy viết lại nội dung sau bằng {lang} theo giọng Gen Z tự nhiên, vui, bắt trend nhưng không lố.",
+                "professional" => $"Hãy viết lại nội dung sau bằng {lang} theo giọng chuyên nghiệp, rõ ràng, có thẩm quyền và phù hợp ngữ cảnh kinh doanh.",
+                _ => $"Hãy viết lại nội dung sau bằng {lang} sao cho rõ ràng, tự nhiên và chuyên nghiệp."
             };
+
+            return toneInstruction + subtitleRules;
         }
 
         private async Task<string> CallGeminiApiAsync(string systemPrompt, string userPrompt)
@@ -253,7 +271,7 @@ If metadata is weak, infer cautiously from title/description/hashtags and lower 
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Exception while calling Gemini API with model {Model}", model);
+                    _logger.LogWarning("Exception while calling Gemini API with model {Model}: {Message}", model, ex.Message);
                     lastException = ex;
                 }
             }

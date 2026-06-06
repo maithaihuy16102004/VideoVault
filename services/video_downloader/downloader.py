@@ -22,25 +22,12 @@ from common.utils import (
     _collect_all_quality_urls,
     _extract_from_render_data,
 )
-from scraper.selenium_driver import _setup_edge, _setup_chrome
+from scraper.selenium_pool import driver_pool
 
 # --------------------------------------------------------------------------- #
 # Helper functions
 # --------------------------------------------------------------------------- #
-def _setup_driver(enable_logging: bool = False):
-    """
-    Attempt to create a WebDriver (Edge or Chrome).
-
-    Returns:
-        webdriver.Remote: The driver instance if successful, otherwise None.
-    """
-    for setup_func in (_setup_edge, _setup_chrome):
-        try:
-            return setup_func(enable_logging=enable_logging)
-        except Exception as e:
-            print(f"⚠️  Khởi tạo driver thất bại: {e}")
-            continue
-    return None
+# Removed _setup_driver as we now use driver_pool
 
 
 def _safe_get_logs(driver):
@@ -218,7 +205,11 @@ def download_with_selenium(url: str, platform: str = 'douyin') -> bool:
         bool: True if a video was successfully saved, False otherwise.
     """
     try:
-        driver = _setup_driver(enable_logging=True)
+        try:
+            driver = driver_pool.get_driver(enable_logging=True)
+        except Exception as e:
+            print(f"⚠️  Không thể lấy trình duyệt từ pool: {e}")
+            driver = None
         if not driver:
             # Fallback directly to yt-dlp if no browser can be started
             print("⚠️  Không thể khởi tạo trình duyệt, chuyển sang yt-dlp.")
@@ -257,17 +248,18 @@ def download_with_selenium(url: str, platform: str = 'douyin') -> bool:
                 'https://www.douyin.com/'
             )
             if _download_file(url_to_dl, title, cookies, referer):
-                driver.quit()
+                driver_pool.release_driver(driver)
                 return True
 
         print("❌ Không thể tải video này bằng trình duyệt.")
-        driver.quit()
+        driver_pool.release_driver(driver)
         return False
 
     except Exception as e:
         print(f"❌ Lỗi không mong muốn: {e}")
         try:
-            driver.quit()
+            if 'driver' in locals() and driver:
+                driver_pool.release_driver(driver)
         except Exception:
             pass
         # If any unexpected error occurs, fall back to yt-dlp

@@ -8,6 +8,11 @@ class VoiceInfo(BaseModel):
     name: str
     gender: str
     language: str
+    country: str = ""
+    accent: str = ""
+    engine: str = ""
+    quality_score: int = 0
+    tags: list[str] = []
 
 class TTSResult(BaseModel):
     audio_path: str

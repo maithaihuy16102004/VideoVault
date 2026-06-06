@@ -3,7 +3,7 @@ import uuid
 import logging
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Dict
 
 from .config import settings
@@ -26,9 +26,13 @@ app.add_middleware(
 jobs_store: Dict[str, PipelineJob] = {}
 
 class StartDubbingRequest(BaseModel):
-    video_path: str
-    target_language: str = "vi"
-    tts_engine: str = "edge-tts"
+    video_path: str = Field(alias="videoUrl")
+    target_language: str = Field(default="vi", alias="targetLanguage")
+    voice_engine: str = Field(default="edge", alias="voiceEngine")
+    voice_profile: str = Field(default="default_female", alias="voiceProfile")
+    preserve_original_duration: bool = Field(default=True, alias="preserveOriginalDuration")
+    disable_video_speed_change: bool = Field(default=True, alias="disableVideoSpeedChange")
+    safe_subtitle_area: bool = Field(default=True, alias="safeSubtitleArea")
     enable_voice_clone: bool = False
     enable_emotion: bool = True
 
@@ -46,7 +50,11 @@ async def start_pipeline(req: StartDubbingRequest, bg_tasks: BackgroundTasks):
         job_id=job_id,
         video_path=req.video_path,
         target_language=req.target_language,
-        tts_engine=req.tts_engine,
+        voice_engine=req.voice_engine,
+        voice_profile=req.voice_profile,
+        preserve_original_duration=req.preserve_original_duration,
+        disable_video_speed_change=req.disable_video_speed_change,
+        safe_subtitle_area=req.safe_subtitle_area,
         enable_voice_clone=req.enable_voice_clone,
         enable_emotion=req.enable_emotion
     )

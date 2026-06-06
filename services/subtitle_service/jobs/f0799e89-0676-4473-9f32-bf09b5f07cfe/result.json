@@ -1,0 +1,33 @@
+{
+  "status": "done",
+  "jobId": "f0799e89-0676-4473-9f32-bf09b5f07cfe",
+  "originalFilename": "不怀好意的男领导约老婆吃饭，爆改老公让他闭嘴 1分钟看完男生变帅，给老公化妆Vlog#青年创作者成长计划 #男生化妆 #妆前妆后 #爆改 #反差_1129fe85.mp4",
+  "fileSizeBytes": 11881118,
+  "sha256": "12be417e6546ef7f37c2a9d7d3311d427ec527492440f5862c5fd28a716d1ca7",
+  "createdAt": "2026-06-02T04:40:29.713737+00:00",
+  "jobDir": "D:\\Work\\services\\subtitle_service\\jobs\\f0799e89-0676-4473-9f32-bf09b5f07cfe",
+  "inputPath": "D:\\Work\\services\\subtitle_service\\jobs\\f0799e89-0676-4473-9f32-bf09b5f07cfe\\input.mp4",
+  "audioPath": "D:\\Work\\services\\subtitle_service\\jobs\\f0799e89-0676-4473-9f32-bf09b5f07cfe\\audio.wav",
+  "videoDuration": 60.88,
+  "audioDuration": 60.88,
+  "progress": 100,
+  "stage": "Hoan tat!",
+  "srtContent": "1\n00:00:00,000 --> 00:00:01,080\n老公 那个天天说人丑\n\n2\n00:00:01,080 --> 00:00:01,600\n配不上我\n\n3\n00:00:01,600 --> 00:00:03,000\n男的一大晚上约我吃饭\n\n4\n00:00:03,000 --> 00:00:04,560\n干嘛 你也答应他了\n\n5\n00:00:04,560 --> 00:00:05,000\n当然了\n\n6\n00:00:05,000 --> 00:00:06,680\n我还要带上你让他彻底闭嘴\n",
+  "error": null,
+  "duration": 60.88,
+  "subtitleCount": 6,
+  "language": "auto",
+  "detectedLanguage": "zh",
+  "diagnostics": {
+    "video_duration": 60.88,
+    "audio_duration": 60.88,
+    "has_audio": true,
+    "mean_volume_db": -26.7,
+    "speech_detected_seconds": 6.68,
+    "speech_ratio": 0.10972404730617608,
+    "detected_language": "zh",
+    "stt_segments": 6,
+    "confidence": "LOW",
+    "duration_delta": 0.0
+  }
+}

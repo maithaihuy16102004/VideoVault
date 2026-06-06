@@ -21,6 +21,7 @@ namespace VideoVault.API.Controllers
         }
 
         [HttpPost("start")]
+        [AllowAnonymous]
         public async Task<IActionResult> StartPipeline([FromBody] DubbingPipelineRequest request)
         {
             if (string.IsNullOrEmpty(request.VideoPath)) return BadRequest(new { error = "VideoPath is required" });
@@ -37,6 +38,7 @@ namespace VideoVault.API.Controllers
         }
 
         [HttpGet("status/{jobId}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetStatus(string jobId)
         {
             try
@@ -51,6 +53,7 @@ namespace VideoVault.API.Controllers
         }
         
         [HttpGet("{jobId}/download")]
+        [AllowAnonymous]
         public async Task<IActionResult> DownloadVideo(string jobId)
         {
             try

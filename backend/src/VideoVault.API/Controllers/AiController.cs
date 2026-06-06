@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VideoVault.Application.Services;
+using VideoVault.Contracts.Ai;
 
 namespace VideoVault.API.Controllers
 {
@@ -26,6 +27,51 @@ namespace VideoVault.API.Controllers
         public class GenerateCaptionRequest
         {
             public string Url { get; set; } = string.Empty;
+        }
+
+        [HttpPost("rewrite")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Rewrite([FromBody] RewriteRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Text))
+            {
+                return BadRequest(new { error = "Text is required" });
+            }
+
+            try
+            {
+                var result = await _aiService.RewriteTextAsync(request.Text, request.Tone, request.TargetLanguage, request.CustomPrompt);
+                return Ok(new RewriteResponse
+                {
+                    OriginalText = request.Text,
+                    RewrittenText = result,
+                    Tone = request.Tone
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(502, new { error = "AI rewrite failed", detail = ex.Message });
+            }
+        }
+
+        [HttpPost("translate")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Translate([FromBody] TranslateRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.Text))
+            {
+                return BadRequest(new { error = "Text is required" });
+            }
+
+            try
+            {
+                var result = await _aiService.TranslateAsync(request.Text, request.TargetLanguage);
+                return Ok(new TranslateResponse { TranslatedText = result });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(502, new { error = "AI translation failed", detail = ex.Message });
+            }
         }
 
         [HttpPost("generate-caption")]

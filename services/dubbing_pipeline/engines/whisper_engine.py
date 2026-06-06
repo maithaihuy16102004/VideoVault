@@ -13,7 +13,7 @@ class WhisperEngine(STTEngine):
             compute_type=compute_type
         )
 
-    def transcribe(self, audio_path: str, language: str = "vi") -> STTResult:
+    def transcribe(self, audio_path: str, language: str | None = None) -> STTResult:
         try:
             segments, info = self.model.transcribe(
                 audio_path,

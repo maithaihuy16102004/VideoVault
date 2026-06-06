@@ -23,6 +23,12 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(optio
     options.MultipartBodyLengthLimit = 524288000; // 500 MB in bytes
 });
 
+// ========== PERFORMANCE ==========
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+});
+
 // ========== SERVICES (DI) ==========
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<DownloadService>();
@@ -38,6 +44,9 @@ builder.Services.AddScoped<IPipelineService, PipelineService>();
 
 builder.Services.AddHttpClient<IDubbingPipelineService, DubbingPipelineService>();
 builder.Services.AddScoped<IDubbingPipelineService, DubbingPipelineService>();
+
+builder.Services.AddHttpClient<ITtsProvider, TtsProviderService>();
+builder.Services.AddScoped<ITtsProvider, TtsProviderService>();
 
 // ========== JWT AUTHENTICATION ==========
 var jwtKey = builder.Configuration["JWT:Key"];
@@ -140,6 +149,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "VideoVault API v1"));
 }
+
+app.UseResponseCompression();
 
 app.UseCors();
 app.UseAuthentication();

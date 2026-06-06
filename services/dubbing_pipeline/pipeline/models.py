@@ -70,6 +70,11 @@ class PipelineJob(BaseModel):
     
     # Configuration
     tts_engine: str = "edge-tts"      # "cosyvoice", "edge-tts", "piper"
+    voice_engine: str = "edge"        # "edge" or "vieneu"
+    voice_profile: str = "default_female"
+    preserve_original_duration: bool = True
+    disable_video_speed_change: bool = True
+    safe_subtitle_area: bool = True
     enable_voice_clone: bool = False
     enable_emotion: bool = True
     speed_min: float = 0.92
@@ -99,3 +104,8 @@ class PipelineJob(BaseModel):
     video_height: int = 0
     original_language: str = ""
     speaker_count: int = 1
+    
+    # Audit
+    normalization_warnings: int = 0
+    timing_warnings: int = 0
+    failed_segments: int = 0

@@ -4,6 +4,7 @@ export interface RewriteRequest {
     text: string;
     tone: string;
     targetLanguage?: string;
+    customPrompt?: string;
 }
 
 export interface RewriteResponse {
@@ -22,11 +23,11 @@ export interface TranslateResponse {
 }
 
 export const rewriteText = async (request: RewriteRequest): Promise<RewriteResponse> => {
-    const response = await axiosInstance.post('/api/ai/rewrite', request);
+    const response = await axiosInstance.post('/api/v1/ai/rewrite', request);
     return response.data;
 };
 
 export const translateText = async (request: TranslateRequest): Promise<TranslateResponse> => {
-    const response = await axiosInstance.post('/api/ai/translate', request);
+    const response = await axiosInstance.post('/api/v1/ai/translate', request);
     return response.data;
 };

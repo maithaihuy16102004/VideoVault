@@ -1,0 +1,33 @@
+{
+  "status": "done",
+  "jobId": "ff68804b-9a21-4049-98e4-c0ccfb70895d",
+  "originalFilename": "final_vi-VN-HoaiMyNeural.mp3",
+  "fileSizeBytes": 21123,
+  "sha256": "096370362e6a3cc4a75a9e0cda525aaff1a8ca7168be8aad9a7fe7c8b821a21f",
+  "createdAt": "2026-06-02T04:37:35.809177+00:00",
+  "jobDir": "D:\\Work\\services\\subtitle_service\\jobs\\ff68804b-9a21-4049-98e4-c0ccfb70895d",
+  "inputPath": "D:\\Work\\services\\subtitle_service\\jobs\\ff68804b-9a21-4049-98e4-c0ccfb70895d\\input.mp3",
+  "audioPath": "D:\\Work\\services\\subtitle_service\\jobs\\ff68804b-9a21-4049-98e4-c0ccfb70895d\\audio.wav",
+  "videoDuration": 2.61,
+  "audioDuration": 2.58,
+  "progress": 100,
+  "stage": "Hoan tat!",
+  "srtContent": "1\n00:00:00,000 --> 00:00:02,560\nXin chào, vậy là ba nghe Thu Dông Long Tan AI.\n",
+  "error": null,
+  "duration": 2.58,
+  "subtitleCount": 1,
+  "language": "auto",
+  "detectedLanguage": "vi",
+  "diagnostics": {
+    "video_duration": 2.61,
+    "audio_duration": 2.58,
+    "has_audio": true,
+    "mean_volume_db": -23.6,
+    "speech_detected_seconds": 2.56,
+    "speech_ratio": 0.9922480620155039,
+    "detected_language": "vi",
+    "stt_segments": 1,
+    "confidence": "LOW",
+    "duration_delta": 0.029999999999999805
+  }
+}
